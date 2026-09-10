@@ -1,17 +1,56 @@
+import {
+    shuffle
+} from "./utils.js";
+
+
+export const QUIZ_CONFIG = {
+
+    questionsPerStage: 2,
+
+    passingPercentage: 0.50,
+
+    questionTime: 15,
+
+    baseXP: 10,
+
+    comboBonus: 5,
+
+    wrongAnswerPenalty: 1
+
+};
+
+
 export class QuizEngine {
 
-    constructor(state, saveState) {
+    constructor(
+        state,
+        saveState
+    ) {
 
         this.state = state;
-        this.saveState = saveState;
+
+        this.saveState =
+            saveState;
+
 
         this.questions = [];
 
+        this.selectedQuestions = [];
+
         this.currentQuestion = 0;
 
-        this.currentCategory = "general";
+        this.currentCategory =
+            "general";
 
         this.currentStage = 1;
+
+        this.correctAnswers = 0;
+
+        this.wrongAnswers = 0;
+
+        this.combo = 0;
+
+        this.finished = false;
 
     }
 
@@ -23,6 +62,7 @@ export class QuizEngine {
                 `data/${category}.json`
             );
 
+
         if (!response.ok) {
 
             throw new Error(
@@ -31,8 +71,10 @@ export class QuizEngine {
 
         }
 
+
         const data =
             await response.json();
+
 
         this.questions =
             data.questions || [];
@@ -53,25 +95,60 @@ export class QuizEngine {
     }
 
 
-    startStage(category, stage) {
+    startStage(
+        category,
+        stage
+    ) {
 
-        this.currentCategory = category;
+        this.currentCategory =
+            category;
 
-        this.currentStage = stage;
+        this.currentStage =
+            stage;
+
 
         this.currentQuestion = 0;
+
+        this.correctAnswers = 0;
+
+        this.wrongAnswers = 0;
+
+        this.combo = 0;
+
+        this.finished = false;
+
+
+        const stageQuestions =
+            this.getStageQuestions(
+                stage
+            );
+
+
+        /*
+         * سؤال‌ها ابتدا shuffle می‌شوند
+         * و بعد فقط تعداد مشخصی انتخاب می‌شود.
+         */
+
+        this.selectedQuestions =
+            shuffle(
+                stageQuestions
+            ).slice(
+                0,
+                Math.min(
+                    QUIZ_CONFIG.questionsPerStage,
+                    stageQuestions.length
+                )
+            );
+
+
+        return this.selectedQuestions;
 
     }
 
 
     getCurrentQuestion() {
 
-        const questions =
-            this.getStageQuestions(
-                this.currentStage
-            );
-
-        return questions[
+        return this.selectedQuestions[
             this.currentQuestion
         ];
 
@@ -80,9 +157,26 @@ export class QuizEngine {
 
     getQuestionCount() {
 
-        return this.getStageQuestions(
-            this.currentStage
-        ).length;
+        return this.selectedQuestions.length;
+
+    }
+
+
+    getProgress() {
+
+        if (
+            this.getQuestionCount() === 0
+        ) {
+
+            return 0;
+
+        }
+
+
+        return (
+            this.currentQuestion /
+            this.getQuestionCount()
+        );
 
     }
 
@@ -91,6 +185,7 @@ export class QuizEngine {
 
         const question =
             this.getCurrentQuestion();
+
 
         if (!question) {
 
@@ -103,13 +198,60 @@ export class QuizEngine {
 
 
         const correct =
-            answerIndex === question.answer;
+            answerIndex ===
+            question.answer;
+
+
+        let earnedXP = 0;
 
 
         if (correct) {
 
+            this.correctAnswers++;
+
+            this.combo++;
+
+
+            if (
+                this.combo >
+                this.state.bestCombo
+            ) {
+
+                this.state.bestCombo =
+                    this.combo;
+
+            }
+
+
+            earnedXP =
+                (question.xp ||
+                    QUIZ_CONFIG.baseXP) +
+                Math.max(
+                    0,
+                    this.combo - 1
+                ) *
+                QUIZ_CONFIG.comboBonus;
+
+
             this.state.xp +=
-                question.xp || 10;
+                earnedXP;
+
+
+        } else {
+
+            this.wrongAnswers++;
+
+            this.combo = 0;
+
+
+            if (
+                this.state.hearts > 0
+            ) {
+
+                this.state.hearts -=
+                    QUIZ_CONFIG.wrongAnswerPenalty;
+
+            }
 
         }
 
@@ -119,33 +261,50 @@ export class QuizEngine {
 
         const finished =
             this.currentQuestion >=
-            this.getQuestionCount();
+            this.selectedQuestions.length;
 
 
-        if (finished && correct) {
+        let passed = false;
 
-            if (
-                this.currentCategory ===
-                "general"
-            ) {
+
+        if (finished) {
+
+            const percentage =
+                this.correctAnswers /
+                this.selectedQuestions.length;
+
+
+            passed =
+                percentage >=
+                QUIZ_CONFIG.passingPercentage;
+
+
+            if (passed) {
 
                 if (
-                    this.state.generalStage ===
-                    this.currentStage
+                    this.currentCategory ===
+                    "general"
                 ) {
 
-                    this.state.generalStage++;
+                    if (
+                        this.state.generalStage ===
+                        this.currentStage
+                    ) {
 
-                }
+                        this.state.generalStage++;
 
-            } else {
+                    }
 
-                if (
-                    this.state.funStage ===
-                    this.currentStage
-                ) {
+                } else {
 
-                    this.state.funStage++;
+                    if (
+                        this.state.funStage ===
+                        this.currentStage
+                    ) {
+
+                        this.state.funStage++;
+
+                    }
 
                 }
 
@@ -160,15 +319,32 @@ export class QuizEngine {
         return {
 
             correct,
+
             finished,
 
-            explanation:
-                question.explanation || "",
+            passed,
 
-            xp:
-                correct
-                    ? question.xp || 10
-                    : 0
+            earnedXP,
+
+            combo: this.combo,
+
+            correctAnswers:
+                this.correctAnswers,
+
+            wrongAnswers:
+                this.wrongAnswers,
+
+            total:
+                this.selectedQuestions.length,
+
+            percentage:
+                this.selectedQuestions.length
+                    ? this.correctAnswers /
+                      this.selectedQuestions.length
+                    : 0,
+
+            explanation:
+                question.explanation || ""
 
         };
 
