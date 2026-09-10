@@ -2,7 +2,9 @@ const STORAGE_KEY =
     "quizduo_state";
 
 
-export function loadState(defaultState) {
+export function loadState(
+    defaultState
+) {
 
     try {
 
@@ -21,13 +23,19 @@ export function loadState(defaultState) {
         }
 
 
+        const parsed =
+            JSON.parse(
+                saved
+            );
+
+
         return {
 
             ...structuredClone(
                 defaultState
             ),
 
-            ...JSON.parse(saved)
+            ...parsed
 
         };
 
@@ -48,7 +56,9 @@ export function loadState(defaultState) {
 }
 
 
-export function saveState(state) {
+export function saveState(
+    state
+) {
 
     try {
 
@@ -57,14 +67,16 @@ export function saveState(state) {
             JSON.stringify(state)
         );
 
+
         return true;
 
     } catch (error) {
 
         console.error(
-            "Could not save state:",
+            "Could not save QuizDuo state:",
             error
         );
+
 
         return false;
 
