@@ -1,352 +1,41 @@
-<!DOCTYPE html>
-<html lang="fa" dir="rtl">
-
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-    <title>QuizDuo</title>
-
-    <link rel="stylesheet" href="css/style.css">
-</head>
-
-<body>
-
 <header class="topbar">
 
     <div class="logo">
         Quiz<span>Duo</span>
     </div>
 
+
     <nav>
-        <button data-page="home">خانه</button>
-        <button data-page="quiz">مسابقه</button>
-        <button data-page="leaderboard">جدول امتیازات</button>
-        <button data-page="profile">پروفایل</button>
-        <button data-page="chat">گفتگو</button>
+
+        <button data-page="home">
+            خانه
+        </button>
+
+        <button data-page="quiz">
+            مسابقات
+        </button>
+
+        <button data-page="leaderboard">
+            جدول امتیازات
+        </button>
+
+        <button data-page="profile">
+            پروفایل
+        </button>
+
+        <button data-page="chat">
+            گفتگو
+        </button>
+
     </nav>
 
+
+    <button
+        id="themeToggle"
+        class="theme-toggle">
+
+        ☀️ حالت روشن
+
+    </button>
+
 </header>
-
-
-<main>
-
-    <!-- HOME -->
-    <section id="home" class="page active">
-
-        <div class="hero">
-
-            <div>
-                <p class="eyebrow">QUIZ • LEARN • PLAY</p>
-
-                <h1>
-                    دانشت را به چالش بکش!
-                </h1>
-
-                <p>
-                    در مراحل مختلف QuizDuo بازی کن،
-                    امتیاز بگیر و پیشرفتت را ادامه بده.
-                </p>
-
-                <button class="primary-btn" data-page="quiz">
-                    شروع مسابقه
-                </button>
-            </div>
-
-            <div class="hero-card">
-
-                <div class="hero-stat">
-                    <strong id="homeXP">0</strong>
-                    <span>XP</span>
-                </div>
-
-                <div class="hero-stat">
-                    <strong id="homeStreak">0</strong>
-                    <span>روز پیاپی</span>
-                </div>
-
-                <div class="hero-stat">
-                    <strong id="homeLevel">1</strong>
-                    <span>سطح</span>
-                </div>
-
-            </div>
-
-        </div>
-
-
-        <div class="category-grid">
-
-            <div class="category-card">
-                <div class="category-icon">🧠</div>
-
-                <h2>اطلاعات عمومی</h2>
-
-                <p>
-                    دانش، علوم، جغرافیا، تاریخ و موضوعات مختلف.
-                </p>
-
-                <button
-                    class="secondary-btn"
-                    data-category="general"
-                    data-page="quiz">
-                    ورود به بخش
-                </button>
-            </div>
-
-
-            <div class="category-card">
-                <div class="category-icon">🎮</div>
-
-                <h2>تفریحی</h2>
-
-                <p>
-                    سؤال‌های سرگرم‌کننده، بازی‌ها، فیلم‌ها و موضوعات جذاب.
-                </p>
-
-                <button
-                    class="secondary-btn"
-                    data-category="fun"
-                    data-page="quiz">
-                    ورود به بخش
-                </button>
-            </div>
-
-        </div>
-
-    </section>
-
-
-
-    <!-- QUIZ -->
-    <section id="quiz" class="page">
-
-        <div class="section-header">
-
-            <div>
-                <p class="eyebrow">QUIZ</p>
-                <h2>مسابقه</h2>
-            </div>
-
-            <div class="quiz-stats">
-
-                <span>
-                    ⭐ <b id="quizXP">0</b>
-                </span>
-
-                <span>
-                    🔥 <b id="quizStreak">0</b>
-                </span>
-
-            </div>
-
-        </div>
-
-
-        <div class="quiz-tabs">
-
-            <button
-                class="quiz-tab active"
-                data-category-tab="general">
-                🧠 اطلاعات عمومی
-            </button>
-
-            <button
-                class="quiz-tab"
-                data-category-tab="fun">
-                🎮 تفریحی
-            </button>
-
-        </div>
-
-
-        <div id="stageList" class="stage-list"></div>
-
-
-        <div id="quizBox" class="quiz-box hidden">
-
-            <div class="quiz-top">
-
-                <span id="quizCategory"></span>
-
-                <span>
-                    سؤال <b id="questionNumber">1</b>
-                </span>
-
-            </div>
-
-
-            <h3 id="questionText"></h3>
-
-
-            <div id="answers" class="answers"></div>
-
-
-            <div id="quizResult" class="quiz-result"></div>
-
-        </div>
-
-    </section>
-
-
-
-    <!-- LEADERBOARD -->
-    <section id="leaderboard" class="page">
-
-        <div class="section-header">
-            <div>
-                <p class="eyebrow">RANKING</p>
-                <h2>جدول امتیازات</h2>
-            </div>
-        </div>
-
-        <div class="online-warning">
-            این بخش در نسخه فعلی نمایشی است.
-            در نسخه آنلاین، امتیازات بازیکنان از سرور دریافت خواهد شد.
-        </div>
-
-        <div class="table-wrapper">
-
-            <table>
-
-                <thead>
-                    <tr>
-                        <th>رتبه</th>
-                        <th>بازیکن</th>
-                        <th>XP</th>
-                        <th>سطح</th>
-                    </tr>
-                </thead>
-
-                <tbody id="leaderboardBody"></tbody>
-
-            </table>
-
-        </div>
-
-    </section>
-
-
-
-    <!-- PROFILE -->
-    <section id="profile" class="page">
-
-        <div class="section-header">
-            <div>
-                <p class="eyebrow">PROFILE</p>
-                <h2>پروفایل</h2>
-            </div>
-        </div>
-
-
-        <div class="profile-card">
-
-            <div class="avatar" id="profileAvatar">
-                ?
-            </div>
-
-            <div>
-                <h2 id="profileName">
-                    بازیکن مهمان
-                </h2>
-
-                <p id="profileLevel">
-                    سطح 1
-                </p>
-            </div>
-
-        </div>
-
-
-        <div class="profile-stats">
-
-            <div>
-                <strong id="profileXP">0</strong>
-                <span>XP</span>
-            </div>
-
-            <div>
-                <strong id="profileStreak">0</strong>
-                <span>Streak</span>
-            </div>
-
-            <div>
-                <strong id="profileGeneral">1</strong>
-                <span>مرحله عمومی</span>
-            </div>
-
-            <div>
-                <strong id="profileFun">1</strong>
-                <span>مرحله تفریحی</span>
-            </div>
-
-        </div>
-
-    </section>
-
-
-
-    <!-- CHAT -->
-    <section id="chat" class="page">
-
-        <div class="section-header">
-            <div>
-                <p class="eyebrow">COMMUNITY</p>
-                <h2>گفتگو</h2>
-            </div>
-        </div>
-
-
-        <div class="online-warning">
-            چت عمومی فقط در نسخه آنلاین فعال خواهد بود.
-        </div>
-
-
-        <div class="chat-box">
-
-            <div id="chatMessages" class="chat-messages">
-
-                <div class="empty-state">
-                    هنوز پیامی وجود ندارد.
-                </div>
-
-            </div>
-
-
-            <div class="chat-input">
-
-                <input
-                    id="chatInput"
-                    type="text"
-                    placeholder="پیام خود را بنویسید...">
-
-                <button id="sendChat">
-                    ارسال
-                </button>
-
-            </div>
-
-        </div>
-
-    </section>
-
-</main>
-
-
-<footer>
-
-    <p>
-        QuizDuo © 2026
-    </p>
-
-    <a href="emergency.html">
-        حالت اضطراری
-    </a>
-
-</footer>
-
-
-<script type="module" src="js/core/app.js"></script>
-
-</body>
-</html>
