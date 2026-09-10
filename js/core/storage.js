@@ -1,15 +1,25 @@
-const STATE_PREFIX =
+const STORAGE_PREFIX =
     "quizduo_state_";
 
 
-function getStateKey(username) {
+function getStorageKey(
+    username
+) {
 
-    const safeUsername =
-        encodeURIComponent(
+    const normalized =
+        String(
             username || "guest"
-        );
+        )
+            .trim()
+            .toLowerCase();
 
-    return `${STATE_PREFIX}${safeUsername}`;
+
+    return (
+        STORAGE_PREFIX +
+        encodeURIComponent(
+            normalized
+        )
+    );
 
 }
 
@@ -23,7 +33,9 @@ export function loadState(
 
         const saved =
             localStorage.getItem(
-                getStateKey(username)
+                getStorageKey(
+                    username
+                )
             );
 
 
@@ -37,10 +49,12 @@ export function loadState(
 
 
         const parsed =
-            JSON.parse(saved);
+            JSON.parse(
+                saved
+            );
 
 
-        return {
+        const result = {
 
             ...structuredClone(
                 defaultState
@@ -50,7 +64,55 @@ export function loadState(
 
         };
 
+
+        /*
+         * سازگاری با نسخه‌های قدیمی
+         */
+
+        if (
+            !result.completedStages
+        ) {
+
+            result.completedStages = {
+
+                general: [],
+
+                fun: []
+
+            };
+
+        }
+
+
+        if (
+            !Array.isArray(
+                result.completedStages.general
+            )
+        ) {
+
+            result.completedStages.general =
+                [];
+
+        }
+
+
+        if (
+            !Array.isArray(
+                result.completedStages.fun
+            )
+        ) {
+
+            result.completedStages.fun =
+                [];
+
+        }
+
+
+        return result;
+
+
     } catch (error) {
+
 
         console.error(
             "QuizDuo state error:",
@@ -75,18 +137,26 @@ export function saveState(
     try {
 
         localStorage.setItem(
-            getStateKey(username),
-            JSON.stringify(state)
+            getStorageKey(
+                username
+            ),
+            JSON.stringify(
+                state
+            )
         );
+
 
         return true;
 
+
     } catch (error) {
 
+
         console.error(
-            "Could not save state:",
+            "Could not save QuizDuo state:",
             error
         );
+
 
         return false;
 
@@ -100,7 +170,9 @@ export function clearState(
 ) {
 
     localStorage.removeItem(
-        getStateKey(username)
+        getStorageKey(
+            username
+        )
     );
 
 }
