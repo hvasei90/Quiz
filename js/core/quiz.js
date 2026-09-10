@@ -3,54 +3,29 @@ import {
 } from "./utils.js";
 
 
-export const QUIZ_CONFIG = {
+import {
+    hasCompletedStage,
+    markStageCompleted
+} from "./state.js";
 
-    /*
-     * تعداد سؤال‌هایی که در هر اجرای
-     * یک مرحله به صورت تصادفی انتخاب می‌شوند.
-     */
+
+export const QUIZ_CONFIG = {
 
     questionsPerStage: 2,
 
-
-    /*
-     * حداقل درصد لازم برای قبولی.
-     *
-     * 0.50 = پنجاه درصد
-     * 0.60 = شصت درصد
-     * 0.80 = هشتاد درصد
-     * 1.00 = صد درصد
-     */
-
     passingPercentage: 0.50,
-
-
-    /*
-     * زمان هر سؤال بر حسب ثانیه
-     */
 
     questionTime: 15,
 
-
-    /*
-     * XP پایه
-     */
-
     baseXP: 10,
-
-
-    /*
-     * XP اضافه برای Combo
-     */
 
     comboBonus: 5,
 
-
     /*
-     * تعداد Heart کم‌شده برای پاسخ غلط
+     * Heart فقط برای باخت کل مرحله استفاده می‌شود.
      */
 
-    wrongAnswerPenalty: 1
+    failedStageHeartPenalty: 1
 
 };
 
@@ -89,6 +64,12 @@ export class QuizEngine {
         this.combo = 0;
 
         this.finished = false;
+
+        /*
+         * آیا این بازی Replay است؟
+         */
+
+        this.isReplay = false;
 
     }
 
@@ -154,7 +135,7 @@ export class QuizEngine {
 
 
         this.currentStage =
-            stage;
+            Number(stage);
 
 
         this.currentQuestion =
@@ -177,18 +158,24 @@ export class QuizEngine {
             false;
 
 
+        /*
+         * بررسی می‌کنیم که آیا این مرحله
+         * قبلاً با موفقیت تمام شده است.
+         */
+
+        this.isReplay =
+            hasCompletedStage(
+                this.state,
+                category,
+                stage
+            );
+
+
         const stageQuestions =
             this.getStageQuestions(
                 stage
             );
 
-
-        /*
-         * ابتدا کل سؤال‌های این مرحله
-         * Shuffle می‌شوند.
-         *
-         * سپس فقط N سؤال انتخاب می‌شود.
-         */
 
         this.selectedQuestions =
             shuffle(
@@ -264,7 +251,9 @@ export class QuizEngine {
 
                 correct: false,
 
-                passed: false
+                passed: false,
+
+                replay: this.isReplay
 
             };
 
@@ -283,7 +272,16 @@ export class QuizEngine {
 
 
 
-        if (correct) {
+        /*
+         * در Replay:
+         *
+         * پاسخ درست Combo را تغییر می‌دهد
+         * اما XP اضافه نمی‌شود.
+         */
+
+        if (
+            correct
+        ) {
 
 
             this.correctAnswers++;
@@ -303,20 +301,26 @@ export class QuizEngine {
             }
 
 
-            earnedXP =
-                (
-                    question.xp ||
-                    QUIZ_CONFIG.baseXP
-                ) +
-                Math.max(
-                    0,
-                    this.combo - 1
-                ) *
-                QUIZ_CONFIG.comboBonus;
+            if (
+                !this.isReplay
+            ) {
+
+                earnedXP =
+                    (
+                        question.xp ||
+                        QUIZ_CONFIG.baseXP
+                    ) +
+                    Math.max(
+                        0,
+                        this.combo - 1
+                    ) *
+                    QUIZ_CONFIG.comboBonus;
 
 
-            this.state.xp +=
-                earnedXP;
+                this.state.xp +=
+                    earnedXP;
+
+            }
 
 
         } else {
@@ -327,19 +331,12 @@ export class QuizEngine {
 
             this.combo = 0;
 
-
-            if (
-                this.state.hearts > 0
-            ) {
-
-                this.state.hearts =
-                    Math.max(
-                        0,
-                        this.state.hearts -
-                        QUIZ_CONFIG.wrongAnswerPenalty
-                    );
-
-            }
+            /*
+             * هیچ Heart اینجا کم نمی‌شود.
+             *
+             * Heart فقط بعد از مشخص شدن
+             * نتیجه کل مرحله کم خواهد شد.
+             */
 
         }
 
@@ -357,9 +354,16 @@ export class QuizEngine {
 
         let passed = false;
 
+        let heartLost = false;
+
+        let stageCompletedNow =
+            false;
 
 
-        if (finished) {
+
+        if (
+            finished
+        ) {
 
 
             const total =
@@ -368,16 +372,12 @@ export class QuizEngine {
 
             const percentage =
                 total > 0
+
                     ? this.correctAnswers /
                       total
+
                     : 0;
 
-
-            /*
-             * قبولی کل مرحله
-             * بر اساس تمام پاسخ‌های مرحله است،
-             * نه پاسخ سؤال آخر.
-             */
 
             passed =
                 percentage >=
@@ -385,8 +385,47 @@ export class QuizEngine {
 
 
 
-            if (passed) {
+            /*
+             * اگر Replay باشد:
+             *
+             * نه XP
+             * نه Heart
+             * نه Unlock
+             */
 
+            if (
+                this.isReplay
+            ) {
+
+                stageCompletedNow =
+                    false;
+
+
+            } else if (
+                passed
+            ) {
+
+
+                /*
+                 * اولین بار است که مرحله را
+                 * با موفقیت تمام کرده‌ایم.
+                 */
+
+                markStageCompleted(
+                    this.state,
+                    this.currentCategory,
+                    this.currentStage
+                );
+
+
+                stageCompletedNow =
+                    true;
+
+
+
+                /*
+                 * باز کردن مرحله بعد
+                 */
 
                 if (
                     this.currentCategory ===
@@ -418,6 +457,34 @@ export class QuizEngine {
 
                 }
 
+
+            } else {
+
+
+                /*
+                 * کل مرحله باخته شده.
+                 *
+                 * فقط یک Heart کم می‌شود.
+                 */
+
+                if (
+                    this.state.hearts > 0
+                ) {
+
+
+                    this.state.hearts =
+                        Math.max(
+                            0,
+                            this.state.hearts -
+                            QUIZ_CONFIG.failedStageHeartPenalty
+                        );
+
+
+                    heartLost =
+                        true;
+
+                }
+
             }
 
         }
@@ -436,9 +503,17 @@ export class QuizEngine {
 
             passed,
 
+            replay:
+                this.isReplay,
+
+            heartLost,
+
+            stageCompletedNow,
+
             earnedXP,
 
-            combo: this.combo,
+            combo:
+                this.combo,
 
             correctAnswers:
                 this.correctAnswers,
@@ -451,8 +526,10 @@ export class QuizEngine {
 
             percentage:
                 this.selectedQuestions.length
+
                     ? this.correctAnswers /
                       this.selectedQuestions.length
+
                     : 0,
 
             explanation:
