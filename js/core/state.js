@@ -16,6 +16,10 @@ export const DEFAULT_STATE = {
 
     funStage: 1,
 
+    completedGeneralStages: [],
+
+    completedFunStages: [],
+
     currentCategory: "general",
 
     subscription: "free",
@@ -28,144 +32,76 @@ export const DEFAULT_STATE = {
 
     bestCombo: 0,
 
-    theme: "dark",
-
-    /*
-     * مرحله‌هایی که کاربر قبلاً با موفقیت
-     * تمام کرده است.
-     *
-     * مثال:
-     *
-     * completedStages: {
-     *     general: [1, 2, 3],
-     *     fun: [1]
-     * }
-     */
-
-    completedStages: {
-
-        general: [],
-
-        fun: []
-
-    }
+    theme: "dark"
 
 };
 
 
 export function createDefaultState() {
 
-    return structuredClone(
-        DEFAULT_STATE
-    );
+    return structuredClone(DEFAULT_STATE);
 
 }
 
 
 export function calculateLevel(xp) {
 
-    return Math.floor(
-        xp / 100
-    ) + 1;
+    return Math.floor(xp / 100) + 1;
 
 }
 
 
-export function addXP(
-    state,
-    amount
-) {
+export function addXP(state, amount) {
 
     state.xp += amount;
 
     state.level =
-        calculateLevel(
-            state.xp
-        );
+        calculateLevel(state.xp);
 
 }
 
 
-export function getCurrentStage(
-    state,
-    category
-) {
+export function getCurrentStage(state, category) {
 
-    if (
-        category === "general"
-    ) {
+    if (category === "general") {
 
         return state.generalStage;
 
     }
-
 
     return state.funStage;
 
 }
 
 
-export function unlockNextStage(
-    state,
-    category
-) {
+export function unlockNextStage(state, category) {
 
-    if (
-        category === "general"
-    ) {
+    if (category === "general") {
 
-        state.generalStage++;
+        state.generalStage += 1;
 
     } else {
 
-        state.funStage++;
+        state.funStage += 1;
 
     }
 
 }
 
 
-export function hasCompletedStage(
+export function isStageCompleted(
     state,
     category,
     stage
 ) {
 
-    if (
-        !state.completedStages
-    ) {
-
-        state.completedStages = {
-
-            general: [],
-
-            fun: []
-
-        };
-
-    }
+    const completedStages =
+        category === "general"
+            ? state.completedGeneralStages
+            : state.completedFunStages;
 
 
-    if (
-        !Array.isArray(
-            state.completedStages[
-                category
-            ]
-        )
-    ) {
-
-        state.completedStages[
-            category
-        ] = [];
-
-    }
-
-
-    return state.completedStages[
-        category
-    ].includes(
-        Number(stage)
-    );
+    return completedStages.includes(stage);
 
 }
 
@@ -176,53 +112,15 @@ export function markStageCompleted(
     stage
 ) {
 
-    if (
-        !state.completedStages
-    ) {
-
-        state.completedStages = {
-
-            general: [],
-
-            fun: []
-
-        };
-
-    }
+    const key =
+        category === "general"
+            ? "completedGeneralStages"
+            : "completedFunStages";
 
 
-    if (
-        !Array.isArray(
-            state.completedStages[
-                category
-            ]
-        )
-    ) {
+    if (!state[key].includes(stage)) {
 
-        state.completedStages[
-            category
-        ] = [];
-
-    }
-
-
-    const stageNumber =
-        Number(stage);
-
-
-    if (
-        !state.completedStages[
-            category
-        ].includes(
-            stageNumber
-        )
-    ) {
-
-        state.completedStages[
-            category
-        ].push(
-            stageNumber
-        );
+        state[key].push(stage);
 
     }
 
