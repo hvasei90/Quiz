@@ -1,8 +1,6 @@
 import {
     DEFAULT_STATE,
-    createDefaultState,
-    calculateLevel,
-    addXP
+    calculateLevel
 } from "./state.js";
 
 import {
@@ -12,11 +10,14 @@ import {
 
 import {
     updateStreak,
+    claimDailyReward,
+    canClaimDailyReward,
     escapeHTML
 } from "./utils.js";
 
 import {
-    QuizEngine
+    QuizEngine,
+    QUIZ_CONFIG
 } from "./quiz.js";
 
 
@@ -33,9 +34,20 @@ const quiz =
 
 const app = {
 
-    category: state.currentCategory || "general",
+    category:
+        state.currentCategory ||
+        "general",
+
+    timer: null,
+
+    timeLeft: 0,
+
+    currentAnswerLocked: false,
+
 
     async init() {
+
+        this.applyTheme();
 
         this.bindNavigation();
 
@@ -43,7 +55,9 @@ const app = {
 
         this.bindCategoryButtons();
 
-        this.bindChat();
+        this.bindThemeButton();
+
+        this.bindDailyReward();
 
         this.renderAll();
 
@@ -60,10 +74,11 @@ const app = {
 
                 button.addEventListener(
                     "click",
-                    () => {
+                    async () => {
 
                         const page =
                             button.dataset.page;
+
 
                         if (
                             button.dataset.category
@@ -73,6 +88,7 @@ const app = {
                                 button.dataset.category;
 
                         }
+
 
                         this.showPage(page);
 
@@ -100,6 +116,7 @@ const app = {
         const target =
             document.getElementById(page);
 
+
         if (target) {
 
             target.classList.add("active");
@@ -110,18 +127,6 @@ const app = {
         if (page === "quiz") {
 
             this.renderStages();
-
-        }
-
-        if (page === "profile") {
-
-            this.renderProfile();
-
-        }
-
-        if (page === "leaderboard") {
-
-            this.renderLeaderboard();
 
         }
 
@@ -143,19 +148,24 @@ const app = {
                         this.category =
                             button.dataset.categoryTab;
 
+
                         document
                             .querySelectorAll(
                                 ".quiz-tab"
                             )
-                            .forEach(tab =>
+                            .forEach(tab => {
+
                                 tab.classList.remove(
                                     "active"
-                                )
-                            );
+                                );
+
+                            });
+
 
                         button.classList.add(
                             "active"
                         );
+
 
                         await this.loadQuiz();
 
@@ -182,7 +192,11 @@ const app = {
                         this.category =
                             button.dataset.category;
 
-                        this.showPage("quiz");
+
+                        this.showPage(
+                            "quiz"
+                        );
+
 
                         await this.loadQuiz();
 
@@ -202,10 +216,6 @@ const app = {
                 this.category
             );
 
-            quiz.startStage(
-                this.category,
-                this.getUnlockedStage()
-            );
 
             this.renderStages();
 
@@ -220,8 +230,11 @@ const app = {
 
     getUnlockedStage() {
 
-        return this.category === "general"
+        return this.category ===
+            "general"
+
             ? state.generalStage
+
             : state.funStage;
 
     },
@@ -233,6 +246,7 @@ const app = {
             document.getElementById(
                 "stageList"
             );
+
 
         if (!container) return;
 
@@ -255,21 +269,31 @@ const app = {
 
 
             const card =
-                document.createElement("button");
+                document.createElement(
+                    "button"
+                );
+
 
             card.className =
                 `stage-card ${
-                    locked ? "locked" : ""
+                    locked
+                        ? "locked"
+                        : ""
                 }`;
 
 
             card.innerHTML = `
 
                 <span class="stage-number">
-                    ${locked ? "🔒" : stage}
+                    ${
+                        locked
+                            ? "🔒"
+                            : stage
+                    }
                 </span>
 
-                <span>
+                <span class="stage-info">
+
                     <strong>
                         مرحله ${stage}
                     </strong>
@@ -278,9 +302,10 @@ const app = {
                         ${
                             locked
                                 ? "قفل است"
-                                : "قابل بازی"
+                                : `${QUIZ_CONFIG.questionsPerStage} سؤال تصادفی`
                         }
                     </small>
+
                 </span>
 
             `;
@@ -290,7 +315,10 @@ const app = {
 
                 card.addEventListener(
                     "click",
-                    () => this.startStage(stage)
+                    () =>
+                        this.startStage(
+                            stage
+                        )
                 );
 
             }
@@ -309,10 +337,16 @@ const app = {
             this.category
         );
 
+
         quiz.startStage(
             this.category,
             stage
         );
+
+
+        this.currentAnswerLocked =
+            false;
+
 
         this.renderQuestion();
 
@@ -333,34 +367,54 @@ const app = {
 
         if (!question) {
 
-            box.classList.add("hidden");
+            box.classList.add(
+                "hidden"
+            );
 
             return;
 
         }
 
 
-        box.classList.remove("hidden");
+        box.classList.remove(
+            "hidden"
+        );
 
 
         document.getElementById(
             "quizCategory"
         ).textContent =
-            this.category === "general"
+            this.category ===
+            "general"
+
                 ? "🧠 اطلاعات عمومی"
+
                 : "🎮 تفریحی";
 
 
         document.getElementById(
             "questionNumber"
         ).textContent =
-            quiz.currentQuestion + 1;
+            `${quiz.currentQuestion + 1}/${quiz.getQuestionCount()}`;
 
 
         document.getElementById(
             "questionText"
         ).textContent =
             question.question;
+
+
+        const progress =
+            (
+                quiz.currentQuestion /
+                quiz.getQuestionCount()
+            ) * 100;
+
+
+        document.getElementById(
+            "quizProgress"
+        ).style.width =
+            `${progress}%`;
 
 
         const answers =
@@ -391,13 +445,10 @@ const app = {
 
                 button.addEventListener(
                     "click",
-                    () => {
-
+                    () =>
                         this.submitAnswer(
                             index
-                        );
-
-                    }
+                        )
                 );
 
 
@@ -408,13 +459,148 @@ const app = {
             }
         );
 
+
+        document
+            .getElementById(
+                "quizResult"
+            )
+            .innerHTML = "";
+
+
+        document
+            .getElementById(
+                "nextQuestionBtn"
+            )
+            .classList.add(
+                "hidden"
+            );
+
+
+        this.updateCombo();
+
+        this.startTimer();
+
+    },
+
+
+    startTimer() {
+
+        this.stopTimer();
+
+
+        this.timeLeft =
+            QUIZ_CONFIG.questionTime;
+
+
+        this.updateTimer();
+
+
+        this.timer =
+            setInterval(
+                () => {
+
+                    this.timeLeft--;
+
+                    this.updateTimer();
+
+
+                    if (
+                        this.timeLeft <= 0
+                    ) {
+
+                        this.stopTimer();
+
+                        this.submitAnswer(
+                            null
+                        );
+
+                    }
+
+                },
+                1000
+            );
+
+    },
+
+
+    stopTimer() {
+
+        if (this.timer) {
+
+            clearInterval(
+                this.timer
+            );
+
+            this.timer = null;
+
+        }
+
+    },
+
+
+    updateTimer() {
+
+        const timer =
+            document.getElementById(
+                "questionTimer"
+            );
+
+
+        if (!timer) return;
+
+
+        timer.textContent =
+            `${this.timeLeft}s`;
+
+
+        const percentage =
+            (
+                this.timeLeft /
+                QUIZ_CONFIG.questionTime
+            ) * 100;
+
+
+        document.getElementById(
+            "timerProgress"
+        ).style.width =
+            `${percentage}%`;
+
     },
 
 
     submitAnswer(index) {
 
+        if (
+            this.currentAnswerLocked
+        ) {
+
+            return;
+
+        }
+
+
+        this.currentAnswerLocked =
+            true;
+
+
+        this.stopTimer();
+
+
         const result =
             quiz.answer(index);
+
+
+        const buttons =
+            document.querySelectorAll(
+                ".answer-btn"
+            );
+
+
+        buttons.forEach(button => {
+
+            button.disabled = true;
+
+        });
 
 
         const resultBox =
@@ -427,48 +613,216 @@ const app = {
 
             updateStreak(state);
 
-            resultBox.innerHTML =
-                `<div class="correct">
-                    ✓ پاسخ درست! +${result.xp} XP
-                </div>`;
+
+            resultBox.innerHTML = `
+
+                <div class="result-success">
+
+                    <strong>
+                        ✓ درست!
+                    </strong>
+
+                    <span>
+                        +${result.earnedXP} XP
+                    </span>
+
+                </div>
+
+            `;
 
         } else {
 
-            resultBox.innerHTML =
-                `<div class="incorrect">
-                    ✕ پاسخ نادرست
-                </div>`;
+            resultBox.innerHTML = `
+
+                <div class="result-error">
+
+                    <strong>
+                        ${
+                            index === null
+                                ? "⏰ زمان تمام شد!"
+                                : "✕ پاسخ نادرست"
+                        }
+                    </strong>
+
+                    <span>
+                        Combo از اول شروع می‌شود.
+                    </span>
+
+                </div>
+
+            `;
 
         }
 
 
-        saveState(state);
+        if (result.explanation) {
+
+            resultBox.innerHTML += `
+
+                <p class="explanation">
+                    ${escapeHTML(
+                        result.explanation
+                    )}
+                </p>
+
+            `;
+
+        }
+
+
+        this.updateCombo();
 
         this.renderAll();
 
 
-        setTimeout(() => {
+        const nextButton =
+            document.getElementById(
+                "nextQuestionBtn"
+            );
 
-            if (result.finished) {
 
-                resultBox.innerHTML =
-                    `<div class="correct">
-                        🎉 مرحله به پایان رسید!
-                    </div>`;
+        nextButton.classList.remove(
+            "hidden"
+        );
 
-                this.renderStages();
 
-                document
-                    .getElementById("quizBox")
-                    .classList.add("hidden");
+        nextButton.textContent =
+            result.finished
+                ? "مشاهده نتیجه مرحله"
+                : "سؤال بعدی →";
 
-            } else {
 
-                this.renderQuestion();
+        nextButton.onclick =
+            () => {
 
-            }
+                if (result.finished) {
 
-        }, 900);
+                    this.showStageResult(
+                        result
+                    );
+
+                } else {
+
+                    this.currentAnswerLocked =
+                        false;
+
+                    this.renderQuestion();
+
+                }
+
+            };
+
+    },
+
+
+    showStageResult(result) {
+
+        this.stopTimer();
+
+
+        const box =
+            document.getElementById(
+                "quizBox"
+            );
+
+
+        const percentage =
+            Math.round(
+                result.percentage *
+                100
+            );
+
+
+        const passed =
+            result.passed;
+
+
+        box.innerHTML = `
+
+            <div class="stage-result">
+
+                <div class="stage-result-icon">
+                    ${passed ? "🎉" : "📚"}
+                </div>
+
+                <h2>
+                    ${
+                        passed
+                            ? "مرحله را با موفقیت گذراندی!"
+                            : "این مرحله هنوز کامل نشده"
+                    }
+                </h2>
+
+                <div class="result-score">
+                    ${percentage}%
+                </div>
+
+                <p>
+                    ${result.correctAnswers}
+                    پاسخ درست از
+                    ${result.total}
+                    سؤال
+                </p>
+
+                ${
+                    passed
+                        ? `
+                            <p class="result-message">
+                                مرحله بعد برایت باز شد!
+                            </p>
+                        `
+                        : `
+                            <p class="result-message">
+                                دوباره تلاش کن تا به
+                                حداقل
+                                ${
+                                    QUIZ_CONFIG.passingPercentage * 100
+                                }٪
+                                برسی.
+                            </p>
+                        `
+                }
+
+                <button
+                    class="primary-btn"
+                    id="closeResult">
+
+                    بازگشت به مراحل
+
+                </button>
+
+            </div>
+
+        `;
+
+
+        document
+            .getElementById(
+                "closeResult"
+            )
+            .onclick =
+            () => {
+
+                location.reload();
+
+            };
+
+    },
+
+
+    updateCombo() {
+
+        const combo =
+            document.getElementById(
+                "comboValue"
+            );
+
+
+        if (!combo) return;
+
+
+        combo.textContent =
+            quiz.combo;
 
     },
 
@@ -476,7 +830,9 @@ const app = {
     renderAll() {
 
         state.level =
-            calculateLevel(state.xp);
+            calculateLevel(
+                state.xp
+            );
 
 
         document.getElementById(
@@ -509,9 +865,17 @@ const app = {
             state.streak;
 
 
+        document.getElementById(
+            "heartValue"
+        ).textContent =
+            state.hearts;
+
+
         this.renderProfile();
 
         this.renderLeaderboard();
+
+        saveState(state);
 
     },
 
@@ -560,9 +924,17 @@ const app = {
 
 
         document.getElementById(
+            "profileBestCombo"
+        ).textContent =
+            state.bestCombo;
+
+
+        document.getElementById(
             "profileAvatar"
         ).textContent =
-            name.charAt(0).toUpperCase();
+            name
+                .charAt(0)
+                .toUpperCase();
 
     },
 
@@ -581,12 +953,23 @@ const app = {
         body.innerHTML = `
 
             <tr>
+
                 <td>1</td>
+
                 <td>
-                    ${escapeHTML(state.username)}
+                    ${escapeHTML(
+                        state.username
+                    )}
                 </td>
-                <td>${state.xp}</td>
-                <td>${state.level}</td>
+
+                <td>
+                    ${state.xp}
+                </td>
+
+                <td>
+                    ${state.level}
+                </td>
+
             </tr>
 
         `;
@@ -594,40 +977,115 @@ const app = {
     },
 
 
-    bindChat() {
-
-        const input =
-            document.getElementById(
-                "chatInput"
-            );
+    bindThemeButton() {
 
         const button =
             document.getElementById(
-                "sendChat"
+                "themeToggle"
             );
 
 
-        if (!input || !button) return;
+        if (!button) return;
 
 
         button.addEventListener(
             "click",
             () => {
 
-                if (!input.value.trim()) {
-                    return;
-                }
+                state.theme =
+                    state.theme === "dark"
+                        ? "light"
+                        : "dark";
 
 
-                alert(
-                    "چت عمومی در نسخه آنلاین فعال خواهد شد."
-                );
+                saveState(state);
 
-
-                input.value = "";
+                this.applyTheme();
 
             }
         );
+
+    },
+
+
+    applyTheme() {
+
+        document.documentElement
+            .setAttribute(
+                "data-theme",
+                state.theme
+            );
+
+
+        const button =
+            document.getElementById(
+                "themeToggle"
+            );
+
+
+        if (button) {
+
+            button.textContent =
+                state.theme === "dark"
+                    ? "☀️ حالت روشن"
+                    : "🌙 حالت تاریک";
+
+        }
+
+    },
+
+
+    bindDailyReward() {
+
+        const button =
+            document.getElementById(
+                "dailyReward"
+            );
+
+
+        if (!button) return;
+
+
+        if (
+            canClaimDailyReward(state)
+        ) {
+
+            button.disabled = false;
+
+
+            button.addEventListener(
+                "click",
+                () => {
+
+                    const reward =
+                        claimDailyReward(
+                            state
+                        );
+
+
+                    state.xp += reward;
+
+
+                    saveState(state);
+
+                    this.renderAll();
+
+
+                    alert(
+                        `🎁 ${reward} XP جایزه روزانه گرفتی!`
+                    );
+
+                }
+            );
+
+        } else {
+
+            button.disabled = true;
+
+            button.textContent =
+                "✓ جایزه امروز دریافت شده";
+
+        }
 
     }
 
