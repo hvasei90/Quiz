@@ -28,7 +28,27 @@ export const DEFAULT_STATE = {
 
     bestCombo: 0,
 
-    theme: "dark"
+    theme: "dark",
+
+    /*
+     * مرحله‌هایی که کاربر قبلاً با موفقیت
+     * تمام کرده است.
+     *
+     * مثال:
+     *
+     * completedStages: {
+     *     general: [1, 2, 3],
+     *     fun: [1]
+     * }
+     */
+
+    completedStages: {
+
+        general: [],
+
+        fun: []
+
+    }
 
 };
 
@@ -99,6 +119,110 @@ export function unlockNextStage(
     } else {
 
         state.funStage++;
+
+    }
+
+}
+
+
+export function hasCompletedStage(
+    state,
+    category,
+    stage
+) {
+
+    if (
+        !state.completedStages
+    ) {
+
+        state.completedStages = {
+
+            general: [],
+
+            fun: []
+
+        };
+
+    }
+
+
+    if (
+        !Array.isArray(
+            state.completedStages[
+                category
+            ]
+        )
+    ) {
+
+        state.completedStages[
+            category
+        ] = [];
+
+    }
+
+
+    return state.completedStages[
+        category
+    ].includes(
+        Number(stage)
+    );
+
+}
+
+
+export function markStageCompleted(
+    state,
+    category,
+    stage
+) {
+
+    if (
+        !state.completedStages
+    ) {
+
+        state.completedStages = {
+
+            general: [],
+
+            fun: []
+
+        };
+
+    }
+
+
+    if (
+        !Array.isArray(
+            state.completedStages[
+                category
+            ]
+        )
+    ) {
+
+        state.completedStages[
+            category
+        ] = [];
+
+    }
+
+
+    const stageNumber =
+        Number(stage);
+
+
+    if (
+        !state.completedStages[
+            category
+        ].includes(
+            stageNumber
+        )
+    ) {
+
+        state.completedStages[
+            category
+        ].push(
+            stageNumber
+        );
 
     }
 
