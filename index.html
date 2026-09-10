@@ -1,41 +1,921 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0">
+
+    <meta
+        name="description"
+        content="QuizDuo - بازی، یادگیری و رقابت">
+
+    <title>QuizDuo</title>
+
+    <link
+        rel="stylesheet"
+        href="css/style.css">
+
+</head>
+
+
+<body>
+
+
 <header class="topbar">
 
-    <div class="logo">
-        Quiz<span>Duo</span>
+    <div class="topbar-left">
+
+        <div class="logo">
+            <span class="logo-main">Quiz</span><span>Duo</span>
+        </div>
+
+
+        <button
+            id="themeToggle"
+            class="theme-toggle"
+            type="button"
+            aria-label="تغییر حالت نمایش">
+
+            ☀️
+
+        </button>
+
     </div>
 
 
     <nav>
 
-        <button data-page="home">
+        <button
+            type="button"
+            data-page="home">
+
             خانه
+
         </button>
 
-        <button data-page="quiz">
+
+        <button
+            type="button"
+            data-page="quiz">
+
             مسابقات
+
         </button>
 
-        <button data-page="leaderboard">
+
+        <button
+            type="button"
+            data-page="leaderboard">
+
             جدول امتیازات
+
         </button>
 
-        <button data-page="profile">
+
+        <button
+            type="button"
+            data-page="profile">
+
             پروفایل
+
         </button>
 
-        <button data-page="chat">
+
+        <button
+            type="button"
+            data-page="chat">
+
             گفتگو
+
         </button>
 
     </nav>
 
-
-    <button
-        id="themeToggle"
-        class="theme-toggle">
-
-        ☀️ حالت روشن
-
-    </button>
-
 </header>
+
+
+
+<main>
+
+
+    <!-- =========================
+         HOME
+    ========================== -->
+
+    <section
+        id="home"
+        class="page active">
+
+
+        <div class="hero">
+
+
+            <div class="hero-content">
+
+                <p class="eyebrow">
+                    QUIZ • LEARN • PLAY
+                </p>
+
+
+                <h1>
+                    دانشت را به چالش بکش!
+                </h1>
+
+
+                <p>
+                    در مراحل مختلف QuizDuo بازی کن،
+                    XP بگیر، رکورد بساز و پیشرفتت را ادامه بده.
+                </p>
+
+
+                <button
+                    class="primary-btn"
+                    type="button"
+                    data-page="quiz">
+
+                    شروع مسابقه
+
+                </button>
+
+            </div>
+
+
+
+            <div class="hero-card">
+
+
+                <div class="hero-stat">
+
+                    <strong id="homeXP">
+                        0
+                    </strong>
+
+                    <span>
+                        XP
+                    </span>
+
+                </div>
+
+
+                <div class="hero-stat">
+
+                    <strong id="homeStreak">
+                        0
+                    </strong>
+
+                    <span>
+                        روز پیاپی
+                    </span>
+
+                </div>
+
+
+                <div class="hero-stat">
+
+                    <strong id="homeLevel">
+                        1
+                    </strong>
+
+                    <span>
+                        Level
+                    </span>
+
+                </div>
+
+
+            </div>
+
+        </div>
+
+
+
+        <div class="category-grid">
+
+
+            <div class="category-card">
+
+                <div class="category-icon">
+                    🧠
+                </div>
+
+
+                <h2>
+                    اطلاعات عمومی
+                </h2>
+
+
+                <p>
+                    علوم، جغرافیا، تاریخ،
+                    فناوری و موضوعات مختلف.
+                </p>
+
+
+                <button
+                    class="secondary-btn"
+                    type="button"
+                    data-category="general"
+                    data-page="quiz">
+
+                    ورود به بخش
+
+                </button>
+
+            </div>
+
+
+
+            <div class="category-card">
+
+                <div class="category-icon">
+                    🎮
+                </div>
+
+
+                <h2>
+                    تفریحی
+                </h2>
+
+
+                <p>
+                    سؤال‌های سرگرم‌کننده،
+                    بازی‌ها و موضوعات جذاب.
+                </p>
+
+
+                <button
+                    class="secondary-btn"
+                    type="button"
+                    data-category="fun"
+                    data-page="quiz">
+
+                    ورود به بخش
+
+                </button>
+
+            </div>
+
+
+        </div>
+
+
+
+        <div class="home-features">
+
+
+            <div class="feature-card">
+
+                <span>
+                    ⭐
+                </span>
+
+                <div>
+
+                    <strong>
+                        XP
+                    </strong>
+
+                    <small>
+                        با بازی کردن امتیاز بگیر.
+                    </small>
+
+                </div>
+
+            </div>
+
+
+
+            <div class="feature-card">
+
+                <span>
+                    🔥
+                </span>
+
+                <div>
+
+                    <strong>
+                        Combo
+                    </strong>
+
+                    <small>
+                        پاسخ‌های درست پشت سر هم.
+                    </small>
+
+                </div>
+
+            </div>
+
+
+
+            <div class="feature-card">
+
+                <span>
+                    🏆
+                </span>
+
+                <div>
+
+                    <strong>
+                        مراحل
+                    </strong>
+
+                    <small>
+                        مرحله به مرحله پیش برو.
+                    </small>
+
+                </div>
+
+            </div>
+
+
+        </div>
+
+
+    </section>
+
+
+
+    <!-- =========================
+         QUIZ
+    ========================== -->
+
+    <section
+        id="quiz"
+        class="page">
+
+
+        <div class="section-header">
+
+
+            <div>
+
+                <p class="eyebrow">
+                    QUIZ
+                </p>
+
+                <h2>
+                    مسابقات
+                </h2>
+
+            </div>
+
+
+            <div class="quiz-stats">
+
+
+                <span>
+                    ⭐
+                    <b id="quizXP">0</b>
+                    XP
+                </span>
+
+
+                <span>
+                    🔥
+                    <b id="quizStreak">0</b>
+                </span>
+
+
+                <span>
+                    ❤️
+                    <b id="heartValue">5</b>
+                </span>
+
+
+            </div>
+
+
+        </div>
+
+
+
+        <div class="quiz-tabs">
+
+
+            <button
+                class="quiz-tab active"
+                type="button"
+                data-category-tab="general">
+
+                🧠 اطلاعات عمومی
+
+            </button>
+
+
+            <button
+                class="quiz-tab"
+                type="button"
+                data-category-tab="fun">
+
+                🎮 تفریحی
+
+            </button>
+
+
+        </div>
+
+
+
+        <div
+            id="stageList"
+            class="stage-list">
+        </div>
+
+
+
+        <div
+            id="quizBox"
+            class="quiz-box hidden">
+
+
+            <div class="quiz-top">
+
+
+                <span id="quizCategory">
+                    🧠 اطلاعات عمومی
+                </span>
+
+
+                <span
+                    class="question-counter">
+
+                    سؤال
+                    <b id="questionNumber">
+                        1/2
+                    </b>
+
+                </span>
+
+
+            </div>
+
+
+
+            <div class="question-progress">
+
+                <div
+                    id="quizProgress"
+                    class="question-progress-bar">
+                </div>
+
+            </div>
+
+
+
+            <div class="timer-row">
+
+
+                <span>
+                    ⏱️ زمان باقی‌مانده
+                </span>
+
+
+                <strong
+                    id="questionTimer">
+
+                    15s
+
+                </strong>
+
+
+            </div>
+
+
+
+            <div class="timer-progress">
+
+                <div
+                    id="timerProgress"
+                    class="timer-progress-bar">
+                </div>
+
+            </div>
+
+
+
+            <div class="combo-display">
+
+                🔥
+                Combo:
+
+                <strong id="comboValue">
+                    0
+                </strong>
+
+            </div>
+
+
+
+            <h3 id="questionText">
+            </h3>
+
+
+
+            <div
+                id="answers"
+                class="answers">
+            </div>
+
+
+
+            <div
+                id="quizResult"
+                class="quiz-result">
+            </div>
+
+
+
+            <button
+                id="nextQuestionBtn"
+                class="primary-btn hidden"
+                type="button">
+
+                سؤال بعدی →
+
+            </button>
+
+
+        </div>
+
+
+    </section>
+
+
+
+    <!-- =========================
+         LEADERBOARD
+    ========================== -->
+
+    <section
+        id="leaderboard"
+        class="page">
+
+
+        <div class="section-header">
+
+
+            <div>
+
+                <p class="eyebrow">
+                    RANKING
+                </p>
+
+                <h2>
+                    جدول امتیازات
+                </h2>
+
+            </div>
+
+
+        </div>
+
+
+
+        <div class="online-warning">
+
+            <strong>
+                حالت نمایشی
+            </strong>
+
+            <p>
+                جدول جهانی در نسخه آنلاین
+                به Backend متصل خواهد شد.
+            </p>
+
+        </div>
+
+
+
+        <div class="table-wrapper">
+
+
+            <table>
+
+                <thead>
+
+                    <tr>
+
+                        <th>
+                            رتبه
+                        </th>
+
+                        <th>
+                            بازیکن
+                        </th>
+
+                        <th>
+                            XP
+                        </th>
+
+                        <th>
+                            Level
+                        </th>
+
+                    </tr>
+
+                </thead>
+
+
+                <tbody id="leaderboardBody">
+                </tbody>
+
+
+            </table>
+
+
+        </div>
+
+
+    </section>
+
+
+
+    <!-- =========================
+         PROFILE
+    ========================== -->
+
+    <section
+        id="profile"
+        class="page">
+
+
+        <div class="section-header">
+
+
+            <div>
+
+                <p class="eyebrow">
+                    PROFILE
+                </p>
+
+                <h2>
+                    پروفایل
+                </h2>
+
+            </div>
+
+
+        </div>
+
+
+
+        <div class="profile-card">
+
+
+            <div
+                class="avatar"
+                id="profileAvatar">
+
+                ?
+
+            </div>
+
+
+            <div class="profile-main-info">
+
+
+                <h2 id="profileName">
+                    بازیکن مهمان
+                </h2>
+
+
+                <p id="profileLevel">
+                    Level 1
+                </p>
+
+
+            </div>
+
+
+        </div>
+
+
+
+        <div class="profile-stats">
+
+
+            <div>
+
+                <strong id="profileXP">
+                    0
+                </strong>
+
+                <span>
+                    XP
+                </span>
+
+            </div>
+
+
+            <div>
+
+                <strong id="profileStreak">
+                    0
+                </strong>
+
+                <span>
+                    Streak
+                </span>
+
+            </div>
+
+
+            <div>
+
+                <strong id="profileGeneral">
+                    1
+                </strong>
+
+                <span>
+                    مرحله عمومی
+                </span>
+
+            </div>
+
+
+            <div>
+
+                <strong id="profileFun">
+                    1
+                </strong>
+
+                <span>
+                    مرحله تفریحی
+                </span>
+
+            </div>
+
+
+            <div>
+
+                <strong id="profileBestCombo">
+                    0
+                </strong>
+
+                <span>
+                    Best Combo
+                </span>
+
+            </div>
+
+
+        </div>
+
+
+
+        <div class="daily-reward-card">
+
+
+            <div>
+
+                <strong>
+                    🎁 جایزه روزانه
+                </strong>
+
+                <p>
+                    هر روز با ورود به بازی
+                    می‌توانی جایزه بگیری.
+                </p>
+
+            </div>
+
+
+            <button
+                id="dailyReward"
+                class="daily-reward"
+                type="button">
+
+                دریافت +25 XP
+
+            </button>
+
+
+        </div>
+
+
+    </section>
+
+
+
+    <!-- =========================
+         CHAT
+    ========================== -->
+
+    <section
+        id="chat"
+        class="page">
+
+
+        <div class="section-header">
+
+
+            <div>
+
+                <p class="eyebrow">
+                    COMMUNITY
+                </p>
+
+                <h2>
+                    گفتگو
+                </h2>
+
+            </div>
+
+
+        </div>
+
+
+
+        <div class="online-warning">
+
+            <strong>
+                چت عمومی
+            </strong>
+
+            <p>
+                این قسمت در نسخه آنلاین
+                با سایر بازیکنان فعال خواهد شد.
+            </p>
+
+        </div>
+
+
+
+        <div class="chat-box">
+
+
+            <div
+                id="chatMessages"
+                class="chat-messages">
+
+
+                <div class="empty-state">
+
+                    هنوز پیامی وجود ندارد.
+
+                </div>
+
+
+            </div>
+
+
+
+            <div class="chat-input">
+
+
+                <input
+                    id="chatInput"
+                    type="text"
+                    maxlength="300"
+                    placeholder="پیام خود را بنویسید...">
+
+
+                <button
+                    id="sendChat"
+                    type="button">
+
+                    ارسال
+
+                </button>
+
+
+            </div>
+
+
+        </div>
+
+
+    </section>
+
+
+</main>
+
+
+
+<footer>
+
+    <p>
+        QuizDuo © 2026
+    </p>
+
+
+    <a href="emergency.html">
+        ورود به حالت اضطراری
+    </a>
+
+</footer>
+
+
+
+<script
+    type="module"
+    src="js/core/app.js">
+</script>
+
+
+</body>
+
+</html>
