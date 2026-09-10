@@ -3,10 +3,12 @@ import {
     calculateLevel
 } from "./state.js";
 
+
 import {
     loadState,
     saveState
 } from "./storage.js";
+
 
 import {
     updateStreak,
@@ -15,14 +17,19 @@ import {
     escapeHTML
 } from "./utils.js";
 
+
 import {
     QuizEngine,
     QUIZ_CONFIG
 } from "./quiz.js";
 
 
+
 const state =
-    loadState(DEFAULT_STATE);
+    loadState(
+        DEFAULT_STATE
+    );
+
 
 
 const quiz =
@@ -32,99 +39,145 @@ const quiz =
     );
 
 
+
 const app = {
+
 
     category:
         state.currentCategory ||
         "general",
 
+
     timer: null,
 
+
     timeLeft: 0,
+
 
     currentAnswerLocked: false,
 
 
     async init() {
 
+
         this.applyTheme();
+
 
         this.bindNavigation();
 
+
         this.bindQuizTabs();
+
 
         this.bindCategoryButtons();
 
+
         this.bindThemeButton();
+
 
         this.bindDailyReward();
 
+
+        this.bindChat();
+
+
         this.renderAll();
+
 
         await this.loadQuiz();
 
+
     },
+
 
 
     bindNavigation() {
 
+
         document
-            .querySelectorAll("[data-page]")
-            .forEach(button => {
-
-                button.addEventListener(
-                    "click",
-                    async () => {
-
-                        const page =
-                            button.dataset.page;
+            .querySelectorAll(
+                "[data-page]"
+            )
+            .forEach(
+                button => {
 
 
-                        if (
-                            button.dataset.category
-                        ) {
+                    button.addEventListener(
+                        "click",
+                        async () => {
 
-                            this.category =
-                                button.dataset.category;
+
+                            const page =
+                                button.dataset.page;
+
+
+
+                            if (
+                                button.dataset.category
+                            ) {
+
+                                this.category =
+                                    button.dataset.category;
+
+                            }
+
+
+
+                            this.showPage(
+                                page
+                            );
 
                         }
+                    );
 
-
-                        this.showPage(page);
-
-                    }
-                );
-
-            });
+                }
+            );
 
     },
 
 
-    showPage(page) {
+
+    showPage(
+        page
+    ) {
+
 
         document
-            .querySelectorAll(".page")
-            .forEach(section => {
+            .querySelectorAll(
+                ".page"
+            )
+            .forEach(
+                section => {
 
-                section.classList.remove(
-                    "active"
-                );
+                    section.classList.remove(
+                        "active"
+                    );
 
-            });
+                }
+            );
+
 
 
         const target =
-            document.getElementById(page);
+            document.getElementById(
+                page
+            );
+
 
 
         if (target) {
 
-            target.classList.add("active");
+            target.classList.add(
+                "active"
+            );
 
         }
 
 
-        if (page === "quiz") {
+
+        if (
+            page === "quiz"
+        ) {
 
             this.renderStages();
 
@@ -133,84 +186,146 @@ const app = {
     },
 
 
+
     bindQuizTabs() {
+
 
         document
             .querySelectorAll(
                 "[data-category-tab]"
             )
-            .forEach(button => {
-
-                button.addEventListener(
-                    "click",
-                    async () => {
-
-                        this.category =
-                            button.dataset.categoryTab;
+            .forEach(
+                button => {
 
 
-                        document
-                            .querySelectorAll(
-                                ".quiz-tab"
-                            )
-                            .forEach(tab => {
+                    button.addEventListener(
+                        "click",
+                        async () => {
 
-                                tab.classList.remove(
-                                    "active"
+
+                            this.category =
+                                button.dataset.categoryTab;
+
+
+
+                            state.currentCategory =
+                                this.category;
+
+
+
+                            saveState(
+                                state
+                            );
+
+
+
+                            document
+                                .querySelectorAll(
+                                    ".quiz-tab"
+                                )
+                                .forEach(
+                                    tab => {
+
+                                        tab.classList.remove(
+                                            "active"
+                                        );
+
+                                    }
                                 );
 
-                            });
 
 
-                        button.classList.add(
-                            "active"
-                        );
+                            button.classList.add(
+                                "active"
+                            );
 
 
-                        await this.loadQuiz();
 
-                    }
-                );
+                            await this.loadQuiz();
 
-            });
+                        }
+                    );
+
+                }
+            );
 
     },
 
 
+
     bindCategoryButtons() {
+
 
         document
             .querySelectorAll(
                 "[data-category]"
             )
-            .forEach(button => {
-
-                button.addEventListener(
-                    "click",
-                    async () => {
-
-                        this.category =
-                            button.dataset.category;
+            .forEach(
+                button => {
 
 
-                        this.showPage(
-                            "quiz"
-                        );
+                    button.addEventListener(
+                        "click",
+                        async () => {
 
 
-                        await this.loadQuiz();
+                            this.category =
+                                button.dataset.category;
 
-                    }
-                );
 
-            });
+
+                            state.currentCategory =
+                                this.category;
+
+
+
+                            saveState(
+                                state
+                            );
+
+
+
+                            this.showPage(
+                                "quiz"
+                            );
+
+
+
+                            document
+                                .querySelectorAll(
+                                    "[data-category-tab]"
+                                )
+                                .forEach(
+                                    tab => {
+
+                                        tab.classList.toggle(
+                                            "active",
+                                            tab.dataset.categoryTab ===
+                                            this.category
+                                        );
+
+                                    }
+                                );
+
+
+
+                            await this.loadQuiz();
+
+                        }
+                    );
+
+                }
+            );
 
     },
 
 
+
     async loadQuiz() {
 
+
         try {
+
 
             await quiz.loadCategory(
                 this.category
@@ -219,16 +334,24 @@ const app = {
 
             this.renderStages();
 
+
+
         } catch (error) {
 
-            console.error(error);
+
+            console.error(
+                "Quiz loading error:",
+                error
+            );
 
         }
 
     },
 
 
+
     getUnlockedStage() {
+
 
         return this.category ===
             "general"
@@ -240,7 +363,9 @@ const app = {
     },
 
 
+
     renderStages() {
+
 
         const container =
             document.getElementById(
@@ -248,14 +373,23 @@ const app = {
             );
 
 
-        if (!container) return;
+
+        if (!container) {
+
+            return;
+
+        }
+
 
 
         const unlocked =
             this.getUnlockedStage();
 
 
-        container.innerHTML = "";
+
+        container.innerHTML =
+            "";
+
 
 
         for (
@@ -264,14 +398,23 @@ const app = {
             stage++
         ) {
 
+
             const locked =
-                stage > unlocked;
+                stage >
+                unlocked;
+
 
 
             const card =
                 document.createElement(
                     "button"
                 );
+
+
+
+            card.type =
+                "button";
+
 
 
             card.className =
@@ -282,15 +425,19 @@ const app = {
                 }`;
 
 
+
             card.innerHTML = `
 
                 <span class="stage-number">
+
                     ${
                         locked
                             ? "🔒"
                             : stage
                     }
+
                 </span>
+
 
                 <span class="stage-info">
 
@@ -298,12 +445,15 @@ const app = {
                         مرحله ${stage}
                     </strong>
 
+
                     <small>
+
                         ${
                             locked
                                 ? "قفل است"
                                 : `${QUIZ_CONFIG.questionsPerStage} سؤال تصادفی`
                         }
+
                     </small>
 
                 </span>
@@ -311,7 +461,9 @@ const app = {
             `;
 
 
+
             if (!locked) {
+
 
                 card.addEventListener(
                     "click",
@@ -324,28 +476,76 @@ const app = {
             }
 
 
-            container.appendChild(card);
+
+            container.appendChild(
+                card
+            );
 
         }
 
     },
 
 
-    async startStage(stage) {
+
+    async startStage(
+        stage
+    ) {
+
+
+        /*
+         * اگر Heart نداشته باشیم،
+         * فعلاً اجازه شروع مرحله جدید داده نمی‌شود.
+         */
+
+        if (
+            state.hearts <= 0
+        ) {
+
+
+            alert(
+                "❤️ فعلاً Heart کافی نداری. بعداً دوباره امتحان کن."
+            );
+
+
+            return;
+
+        }
+
+
 
         await quiz.loadCategory(
             this.category
         );
 
 
-        quiz.startStage(
-            this.category,
-            stage
-        );
+
+        const selected =
+            quiz.startStage(
+                this.category,
+                stage
+            );
+
+
+
+        if (
+            selected.length === 0
+        ) {
+
+
+            alert(
+                "برای این مرحله هنوز سؤال ثبت نشده است."
+            );
+
+
+            return;
+
+        }
+
 
 
         this.currentAnswerLocked =
             false;
+
 
 
         this.renderQuestion();
@@ -353,10 +553,13 @@ const app = {
     },
 
 
+
     renderQuestion() {
+
 
         const question =
             quiz.getCurrentQuestion();
+
 
 
         const box =
@@ -365,15 +568,26 @@ const app = {
             );
 
 
-        if (!question) {
 
-            box.classList.add(
-                "hidden"
-            );
+        if (
+            !question ||
+            !box
+        ) {
+
+
+            if (box) {
+
+                box.classList.add(
+                    "hidden"
+                );
+
+            }
+
 
             return;
 
         }
+
 
 
         box.classList.remove(
@@ -381,9 +595,11 @@ const app = {
         );
 
 
+
         document.getElementById(
             "quizCategory"
         ).textContent =
+
             this.category ===
             "general"
 
@@ -392,16 +608,20 @@ const app = {
                 : "🎮 تفریحی";
 
 
+
         document.getElementById(
             "questionNumber"
         ).textContent =
+
             `${quiz.currentQuestion + 1}/${quiz.getQuestionCount()}`;
+
 
 
         document.getElementById(
             "questionText"
         ).textContent =
             question.question;
+
 
 
         const progress =
@@ -411,10 +631,12 @@ const app = {
             ) * 100;
 
 
+
         document.getElementById(
             "quizProgress"
         ).style.width =
             `${progress}%`;
+
 
 
         const answers =
@@ -423,11 +645,18 @@ const app = {
             );
 
 
-        answers.innerHTML = "";
+
+        answers.innerHTML =
+            "";
+
 
 
         question.options.forEach(
-            (option, index) => {
+            (
+                option,
+                index
+            ) => {
+
 
                 const button =
                     document.createElement(
@@ -435,12 +664,20 @@ const app = {
                     );
 
 
+
+                button.type =
+                    "button";
+
+
+
                 button.className =
                     "answer-btn";
 
 
+
                 button.textContent =
                     option;
+
 
 
                 button.addEventListener(
@@ -452,6 +689,7 @@ const app = {
                 );
 
 
+
                 answers.appendChild(
                     button
                 );
@@ -460,11 +698,12 @@ const app = {
         );
 
 
-        document
-            .getElementById(
-                "quizResult"
-            )
-            .innerHTML = "";
+
+        document.getElementById(
+            "quizResult"
+        ).innerHTML =
+            "";
+
 
 
         document
@@ -476,39 +715,51 @@ const app = {
             );
 
 
+
         this.updateCombo();
+
 
         this.startTimer();
 
     },
 
 
+
     startTimer() {
 
+
         this.stopTimer();
+
 
 
         this.timeLeft =
             QUIZ_CONFIG.questionTime;
 
 
+
         this.updateTimer();
+
 
 
         this.timer =
             setInterval(
                 () => {
 
+
                     this.timeLeft--;
 
+
                     this.updateTimer();
+
 
 
                     if (
                         this.timeLeft <= 0
                     ) {
 
+
                         this.stopTimer();
+
 
                         this.submitAnswer(
                             null
@@ -523,22 +774,31 @@ const app = {
     },
 
 
+
     stopTimer() {
 
-        if (this.timer) {
+
+        if (
+            this.timer
+        ) {
+
 
             clearInterval(
                 this.timer
             );
 
-            this.timer = null;
+
+            this.timer =
+                null;
 
         }
 
     },
 
 
+
     updateTimer() {
+
 
         const timer =
             document.getElementById(
@@ -546,11 +806,28 @@ const app = {
             );
 
 
-        if (!timer) return;
+
+        const progress =
+            document.getElementById(
+                "timerProgress"
+            );
+
+
+
+        if (
+            !timer ||
+            !progress
+        ) {
+
+            return;
+
+        }
+
 
 
         timer.textContent =
             `${this.timeLeft}s`;
+
 
 
         const percentage =
@@ -560,15 +837,39 @@ const app = {
             ) * 100;
 
 
-        document.getElementById(
-            "timerProgress"
-        ).style.width =
-            `${percentage}%`;
+
+        progress.style.width =
+            `${Math.max(
+                0,
+                percentage
+            )}%`;
+
+
+
+        if (
+            this.timeLeft <= 5
+        ) {
+
+            timer.classList.add(
+                "timer-danger"
+            );
+
+        } else {
+
+            timer.classList.remove(
+                "timer-danger"
+            );
+
+        }
 
     },
 
 
-    submitAnswer(index) {
+
+    submitAnswer(
+        index
+    ) {
+
 
         if (
             this.currentAnswerLocked
@@ -579,15 +880,21 @@ const app = {
         }
 
 
+
         this.currentAnswerLocked =
             true;
+
 
 
         this.stopTimer();
 
 
+
         const result =
-            quiz.answer(index);
+            quiz.answer(
+                index
+            );
+
 
 
         const buttons =
@@ -596,11 +903,48 @@ const app = {
             );
 
 
-        buttons.forEach(button => {
 
-            button.disabled = true;
+        buttons.forEach(
+            button => {
 
-        });
+                button.disabled =
+                    true;
+
+            }
+        );
+
+
+
+        /*
+         * رنگ‌بندی پاسخ انتخاب‌شده
+         */
+
+        buttons.forEach(
+            (
+                button,
+                buttonIndex
+            ) => {
+
+
+                if (
+                    buttonIndex ===
+                    Number(
+                        result.correctAnswer ===
+                        button.textContent
+                            ? buttonIndex
+                            : -1
+                    )
+                ) {
+
+                    button.classList.add(
+                        "correct-answer"
+                    );
+
+                }
+
+            }
+        );
+
 
 
         const resultBox =
@@ -609,9 +953,16 @@ const app = {
             );
 
 
-        if (result.correct) {
 
-            updateStreak(state);
+        if (
+            result.correct
+        ) {
+
+
+            updateStreak(
+                state
+            );
+
 
 
             resultBox.innerHTML = `
@@ -619,8 +970,9 @@ const app = {
                 <div class="result-success">
 
                     <strong>
-                        ✓ درست!
+                        ✓ پاسخ درست!
                     </strong>
+
 
                     <span>
                         +${result.earnedXP} XP
@@ -630,22 +982,33 @@ const app = {
 
             `;
 
+
+
         } else {
+
 
             resultBox.innerHTML = `
 
                 <div class="result-error">
 
                     <strong>
+
                         ${
                             index === null
                                 ? "⏰ زمان تمام شد!"
                                 : "✕ پاسخ نادرست"
                         }
+
                     </strong>
 
+
                     <span>
-                        Combo از اول شروع می‌شود.
+
+                        پاسخ درست:
+                        ${escapeHTML(
+                            result.correctAnswer
+                        )}
+
                     </span>
 
                 </div>
@@ -655,14 +1018,20 @@ const app = {
         }
 
 
-        if (result.explanation) {
+
+        if (
+            result.explanation
+        ) {
+
 
             resultBox.innerHTML += `
 
                 <p class="explanation">
+
                     ${escapeHTML(
                         result.explanation
                     )}
+
                 </p>
 
             `;
@@ -670,9 +1039,12 @@ const app = {
         }
 
 
+
         this.updateCombo();
 
+
         this.renderAll();
+
 
 
         const nextButton =
@@ -681,30 +1053,42 @@ const app = {
             );
 
 
+
         nextButton.classList.remove(
             "hidden"
         );
 
 
+
         nextButton.textContent =
             result.finished
+
                 ? "مشاهده نتیجه مرحله"
+
                 : "سؤال بعدی →";
+
 
 
         nextButton.onclick =
             () => {
 
-                if (result.finished) {
+
+                if (
+                    result.finished
+                ) {
+
 
                     this.showStageResult(
                         result
                     );
 
+
                 } else {
+
 
                     this.currentAnswerLocked =
                         false;
+
 
                     this.renderQuestion();
 
@@ -715,15 +1099,21 @@ const app = {
     },
 
 
-    showStageResult(result) {
+
+    showStageResult(
+        result
+    ) {
+
 
         this.stopTimer();
+
 
 
         const box =
             document.getElementById(
                 "quizBox"
             );
+
 
 
         const percentage =
@@ -733,67 +1123,143 @@ const app = {
             );
 
 
+
         const passed =
             result.passed;
+
 
 
         box.innerHTML = `
 
             <div class="stage-result">
 
+
                 <div class="stage-result-icon">
-                    ${passed ? "🎉" : "📚"}
+
+                    ${
+                        passed
+                            ? "🎉"
+                            : "📚"
+                    }
+
                 </div>
 
+
+                <p class="eyebrow">
+                    STAGE RESULT
+                </p>
+
+
                 <h2>
+
                     ${
                         passed
                             ? "مرحله را با موفقیت گذراندی!"
-                            : "این مرحله هنوز کامل نشده"
+                            : "هنوز به حد نصاب نرسیدی"
                     }
+
                 </h2>
 
+
                 <div class="result-score">
+
                     ${percentage}%
+
                 </div>
 
-                <p>
+
+                <p class="result-details">
+
                     ${result.correctAnswers}
+
                     پاسخ درست از
+
                     ${result.total}
+
                     سؤال
+
                 </p>
+
+
+                <div class="result-breakdown">
+
+
+                    <div>
+
+                        <strong>
+                            ✓
+                        </strong>
+
+                        <span>
+                            ${result.correctAnswers}
+                            درست
+                        </span>
+
+                    </div>
+
+
+                    <div>
+
+                        <strong>
+                            ✕
+                        </strong>
+
+                        <span>
+                            ${result.wrongAnswers}
+                            غلط
+                        </span>
+
+                    </div>
+
+
+                </div>
+
 
                 ${
                     passed
+
                         ? `
-                            <p class="result-message">
-                                مرحله بعد برایت باز شد!
+
+                            <p class="result-message success-text">
+
+                                🔓 مرحله بعد باز شد!
+
                             </p>
+
                         `
+
                         : `
+
                             <p class="result-message">
-                                دوباره تلاش کن تا به
-                                حداقل
+
+                                برای عبور از این مرحله حداقل
+
                                 ${
                                     QUIZ_CONFIG.passingPercentage * 100
                                 }٪
-                                برسی.
+
+                                پاسخ درست لازم است.
+
                             </p>
+
                         `
                 }
 
+
                 <button
                     class="primary-btn"
-                    id="closeResult">
+                    id="closeResult"
+                    type="button">
 
                     بازگشت به مراحل
 
                 </button>
 
+
             </div>
 
         `;
+
 
 
         document
@@ -803,14 +1269,112 @@ const app = {
             .onclick =
             () => {
 
-                location.reload();
+
+                box.classList.add(
+                    "hidden"
+                );
+
+
+                box.innerHTML = `
+
+                    <div class="quiz-top">
+
+                        <span id="quizCategory"></span>
+
+                        <span class="question-counter">
+
+                            سؤال
+                            <b id="questionNumber"></b>
+
+                        </span>
+
+                    </div>
+
+
+                    <div class="question-progress">
+
+                        <div
+                            id="quizProgress"
+                            class="question-progress-bar">
+                        </div>
+
+                    </div>
+
+
+                    <div class="timer-row">
+
+                        <span>
+                            ⏱️ زمان باقی‌مانده
+                        </span>
+
+                        <strong
+                            id="questionTimer">
+                            15s
+                        </strong>
+
+                    </div>
+
+
+                    <div class="timer-progress">
+
+                        <div
+                            id="timerProgress"
+                            class="timer-progress-bar">
+                        </div>
+
+                    </div>
+
+
+                    <div class="combo-display">
+
+                        🔥 Combo:
+
+                        <strong id="comboValue">
+                            0
+                        </strong>
+
+                    </div>
+
+
+                    <h3 id="questionText"></h3>
+
+
+                    <div
+                        id="answers"
+                        class="answers">
+                    </div>
+
+
+                    <div
+                        id="quizResult"
+                        class="quiz-result">
+                    </div>
+
+
+                    <button
+                        id="nextQuestionBtn"
+                        class="primary-btn hidden"
+                        type="button">
+
+                        سؤال بعدی →
+
+                    </button>
+
+                `;
+
+
+
+                this.renderStages();
+
 
             };
 
     },
 
 
+
     updateCombo() {
+
 
         const combo =
             document.getElementById(
@@ -818,21 +1382,28 @@ const app = {
             );
 
 
-        if (!combo) return;
 
+        if (
+            combo
+        ) {
 
-        combo.textContent =
-            quiz.combo;
+            combo.textContent =
+                quiz.combo;
+
+        }
 
     },
 
 
+
     renderAll() {
+
 
         state.level =
             calculateLevel(
                 state.xp
             );
+
 
 
         document.getElementById(
@@ -841,10 +1412,12 @@ const app = {
             state.xp;
 
 
+
         document.getElementById(
             "homeStreak"
         ).textContent =
             state.streak;
+
 
 
         document.getElementById(
@@ -853,10 +1426,12 @@ const app = {
             state.level;
 
 
+
         document.getElementById(
             "quizXP"
         ).textContent =
             state.xp;
+
 
 
         document.getElementById(
@@ -865,26 +1440,38 @@ const app = {
             state.streak;
 
 
+
         document.getElementById(
             "heartValue"
         ).textContent =
             state.hearts;
 
 
+
         this.renderProfile();
+
 
         this.renderLeaderboard();
 
-        saveState(state);
+
+        this.updateDailyRewardButton();
+
+
+        saveState(
+            state
+        );
 
     },
 
 
+
     renderProfile() {
+
 
         const name =
             state.username ||
             "بازیکن مهمان";
+
 
 
         document.getElementById(
@@ -893,10 +1480,12 @@ const app = {
             name;
 
 
+
         document.getElementById(
             "profileLevel"
         ).textContent =
-            `سطح ${state.level}`;
+            `Level ${state.level}`;
+
 
 
         document.getElementById(
@@ -905,10 +1494,12 @@ const app = {
             state.xp;
 
 
+
         document.getElementById(
             "profileStreak"
         ).textContent =
             state.streak;
+
 
 
         document.getElementById(
@@ -917,16 +1508,19 @@ const app = {
             state.generalStage;
 
 
+
         document.getElementById(
             "profileFun"
         ).textContent =
             state.funStage;
 
 
+
         document.getElementById(
             "profileBestCombo"
         ).textContent =
             state.bestCombo;
+
 
 
         document.getElementById(
@@ -939,7 +1533,9 @@ const app = {
     },
 
 
+
     renderLeaderboard() {
+
 
         const body =
             document.getElementById(
@@ -947,24 +1543,39 @@ const app = {
             );
 
 
-        if (!body) return;
+
+        if (
+            !body
+        ) {
+
+            return;
+
+        }
+
 
 
         body.innerHTML = `
 
             <tr>
 
-                <td>1</td>
+                <td>
+                    1
+                </td>
+
 
                 <td>
+
                     ${escapeHTML(
                         state.username
                     )}
+
                 </td>
+
 
                 <td>
                     ${state.xp}
                 </td>
+
 
                 <td>
                     ${state.level}
@@ -977,7 +1588,9 @@ const app = {
     },
 
 
+
     bindThemeButton() {
+
 
         const button =
             document.getElementById(
@@ -985,20 +1598,36 @@ const app = {
             );
 
 
-        if (!button) return;
+
+        if (
+            !button
+        ) {
+
+            return;
+
+        }
+
 
 
         button.addEventListener(
             "click",
             () => {
 
+
                 state.theme =
-                    state.theme === "dark"
+                    state.theme ===
+                    "dark"
+
                         ? "light"
+
                         : "dark";
 
 
-                saveState(state);
+
+                saveState(
+                    state
+                );
+
 
                 this.applyTheme();
 
@@ -1008,7 +1637,9 @@ const app = {
     },
 
 
+
     applyTheme() {
+
 
         document.documentElement
             .setAttribute(
@@ -1017,25 +1648,45 @@ const app = {
             );
 
 
+
         const button =
             document.getElementById(
                 "themeToggle"
             );
 
 
-        if (button) {
+
+        if (
+            button
+        ) {
+
 
             button.textContent =
-                state.theme === "dark"
-                    ? "☀️ حالت روشن"
-                    : "🌙 حالت تاریک";
+                state.theme ===
+                "dark"
+
+                    ? "☀️"
+
+                    : "🌙";
+
+
+
+            button.title =
+                state.theme ===
+                "dark"
+
+                    ? "حالت روشن"
+
+                    : "حالت تاریک";
 
         }
 
     },
 
 
+
     bindDailyReward() {
+
 
         const button =
             document.getElementById(
@@ -1043,53 +1694,183 @@ const app = {
             );
 
 
-        if (!button) return;
+
+        if (
+            !button
+        ) {
+
+            return;
+
+        }
+
+
+
+        button.addEventListener(
+            "click",
+            () => {
+
+
+                const reward =
+                    claimDailyReward(
+                        state
+                    );
+
+
+                if (
+                    reward <= 0
+                ) {
+
+                    return;
+
+                }
+
+
+
+                state.xp +=
+                    reward;
+
+
+
+                state.level =
+                    calculateLevel(
+                        state.xp
+                    );
+
+
+
+                saveState(
+                    state
+                );
+
+
+
+                this.renderAll();
+
+
+                alert(
+                    `🎁 ${reward} XP جایزه روزانه گرفتی!`
+                );
+
+            }
+        );
+
+
+
+        this.updateDailyRewardButton();
+
+    },
+
+
+
+    updateDailyRewardButton() {
+
+
+        const button =
+            document.getElementById(
+                "dailyReward"
+            );
+
 
 
         if (
-            canClaimDailyReward(state)
+            !button
         ) {
 
-            button.disabled = false;
+            return;
+
+        }
 
 
-            button.addEventListener(
-                "click",
-                () => {
 
-                    const reward =
-                        claimDailyReward(
-                            state
-                        );
+        if (
+            canClaimDailyReward(
+                state
+            )
+        ) {
 
 
-                    state.xp += reward;
+            button.disabled =
+                false;
 
 
-                    saveState(state);
+            button.textContent =
+                "دریافت +25 XP";
 
-                    this.renderAll();
-
-
-                    alert(
-                        `🎁 ${reward} XP جایزه روزانه گرفتی!`
-                    );
-
-                }
-            );
 
         } else {
 
-            button.disabled = true;
+
+            button.disabled =
+                true;
+
 
             button.textContent =
                 "✓ جایزه امروز دریافت شده";
 
         }
 
+    },
+
+
+
+    bindChat() {
+
+
+        const input =
+            document.getElementById(
+                "chatInput"
+            );
+
+
+        const button =
+            document.getElementById(
+                "sendChat"
+            );
+
+
+
+        if (
+            !input ||
+            !button
+        ) {
+
+            return;
+
+        }
+
+
+
+        button.addEventListener(
+            "click",
+            () => {
+
+
+                if (
+                    !input.value.trim()
+                ) {
+
+                    return;
+
+                }
+
+
+
+                alert(
+                    "💬 چت عمومی در نسخه آنلاین فعال خواهد شد."
+                );
+
+
+
+                input.value =
+                    "";
+
+            }
+        );
+
     }
 
 };
+
 
 
 app.init();
