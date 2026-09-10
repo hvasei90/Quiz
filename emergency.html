@@ -9,107 +9,230 @@
         name="viewport"
         content="width=device-width, initial-scale=1.0">
 
-    <title>QuizDuo Emergency</title>
+    <meta
+        name="description"
+        content="QuizDuo Emergency Mode">
 
-    <link rel="stylesheet" href="css/style.css">
+    <title>
+        QuizDuo - Emergency Mode
+    </title>
+
+    <link
+        rel="stylesheet"
+        href="css/style.css">
 
 </head>
 
+
 <body>
+
 
 <header class="topbar">
 
-    <div class="logo">
-        Quiz<span>Duo</span>
+
+    <div class="topbar-left">
+
+
+        <div class="logo">
+
+            <span class="logo-main">
+                Quiz
+            </span><span>
+                Duo
+            </span>
+
+        </div>
+
+
+        <div class="emergency-badge">
+
+            Emergency Mode
+
+        </div>
+
+
     </div>
 
-    <div class="emergency-badge">
-        حالت اضطراری
-    </div>
 
 </header>
 
 
+
 <main>
 
-    <section class="page active">
+
+    <section
+        class="page active emergency-page">
+
 
         <div class="hero">
 
-            <div>
+
+            <div class="hero-content">
+
 
                 <p class="eyebrow">
                     EMERGENCY MODE
                 </p>
 
+
                 <h1>
                     QuizDuo بدون اینترنت
                 </h1>
 
+
                 <p>
-                    در این حالت اطلاعات بازیکن و پیشرفت
+                    در این حالت اطلاعات و پیشرفت
                     روی همین دستگاه ذخیره می‌شود.
                 </p>
 
+
             </div>
 
+
         </div>
+
 
 
         <div class="offline-features">
 
-            <div class="category-card">
-                <h2>🧠 مسابقه</h2>
-                <p>
-                    مراحل و سؤال‌ها بدون نیاز به اینترنت.
-                </p>
-            </div>
 
             <div class="category-card">
-                <h2>⭐ XP</h2>
+
+                <div class="category-icon">
+                    🧠
+                </div>
+
+                <h2>
+                    مسابقه
+                </h2>
+
                 <p>
-                    امتیاز و پیشرفت روی دستگاه ذخیره می‌شود.
+                    سؤال‌ها و مراحل محلی
+                    بدون نیاز به سرور.
                 </p>
+
             </div>
 
+
+
             <div class="category-card">
-                <h2>🔥 Streak</h2>
+
+                <div class="category-icon">
+                    ⭐
+                </div>
+
+                <h2>
+                    XP
+                </h2>
+
                 <p>
-                    روند پیشرفت کاربر حفظ می‌شود.
+                    امتیاز و پیشرفت روی
+                    همین دستگاه ذخیره می‌شود.
                 </p>
+
             </div>
+
+
+
+            <div class="category-card">
+
+                <div class="category-icon">
+                    🔥
+                </div>
+
+                <h2>
+                    Streak
+                </h2>
+
+                <p>
+                    روند فعالیت کاربر
+                    حفظ می‌شود.
+                </p>
+
+            </div>
+
 
         </div>
+
 
 
         <div class="emergency-note">
 
-            <h3>در حالت اضطراری چه چیزهایی غیرفعال است؟</h3>
+
+            <h3>
+                امکانات غیرفعال در حالت اضطراری
+            </h3>
+
 
             <ul>
-                <li>جدول امتیازات جهانی</li>
-                <li>چت با سایر کاربران</li>
-                <li>حساب کاربری آنلاین</li>
-                <li>امکاناتی که به سرور نیاز دارند</li>
+
+                <li>
+                    جدول امتیازات جهانی
+                </li>
+
+                <li>
+                    چت با سایر کاربران
+                </li>
+
+                <li>
+                    حساب کاربری آنلاین
+                </li>
+
+                <li>
+                    امکانات وابسته به Backend
+                </li>
+
+                <li>
+                    پرداخت و Subscription آنلاین
+                </li>
+
             </ul>
+
 
         </div>
 
 
-        <button
-            class="primary-btn"
-            onclick="location.href='index.html'">
 
-            بازگشت به QuizDuo
+        <div class="emergency-actions">
 
-        </button>
+
+            <button
+                class="primary-btn"
+                type="button"
+                onclick="location.href='index.html'">
+
+                بازگشت به QuizDuo
+
+            </button>
+
+
+        </div>
+
 
     </section>
+
 
 </main>
 
 
-<script type="module" src="js/offline/offline.js"></script>
+
+<footer>
+
+    <p>
+        QuizDuo Emergency Mode
+    </p>
+
+</footer>
+
+
+
+<script
+    type="module"
+    src="js/offline/offline.js">
+</script>
+
 
 </body>
+
 </html>
