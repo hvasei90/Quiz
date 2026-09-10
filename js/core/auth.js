@@ -1,13 +1,11 @@
 const USERS_KEY =
     "quizduo_users";
 
-
 const CURRENT_USER_KEY =
     "quizduo_current_user";
 
 
-
-function loadUsers() {
+function getUsers() {
 
     try {
 
@@ -19,75 +17,41 @@ function loadUsers() {
 
         if (!saved) {
 
-            return {};
+            return [];
 
         }
 
 
         const users =
-            JSON.parse(
-                saved
-            );
+            JSON.parse(saved);
 
 
-        if (
-            typeof users !==
-            "object" ||
-            users === null
-        ) {
-
-            return {};
-
-        }
-
-
-        return users;
-
+        return Array.isArray(users)
+            ? users
+            : [];
 
     } catch (error) {
 
-
         console.error(
-            "Could not load QuizDuo users:",
+            "QuizDuo users error:",
             error
         );
 
-
-        return {};
+        return [];
 
     }
 
 }
 
 
-
-function saveUsers(
-    users
-) {
+function saveUsers(users) {
 
     localStorage.setItem(
         USERS_KEY,
-        JSON.stringify(
-            users
-        )
+        JSON.stringify(users)
     );
 
 }
-
-
-
-function normalizeUsername(
-    username
-) {
-
-    return String(
-        username || ""
-    )
-        .trim()
-        .toLowerCase();
-
-}
-
 
 
 export function getCurrentUser() {
@@ -99,7 +63,6 @@ export function getCurrentUser() {
 }
 
 
-
 export function isLoggedIn() {
 
     return Boolean(
@@ -109,142 +72,109 @@ export function isLoggedIn() {
 }
 
 
-
 export function register(
     username,
     password,
-    passwordConfirm
+    confirmPassword
 ) {
 
-
-    const cleanUsername =
-        String(
-            username || ""
-        ).trim();
+    username =
+        username.trim();
 
 
-    const normalized =
-        normalizeUsername(
-            cleanUsername
-        );
-
-
-    if (
-        cleanUsername.length < 3
-    ) {
+    if (!username) {
 
         return {
-
             success: false,
+            message:
+                "لطفاً نام کاربری را وارد کنید."
+        };
 
+    }
+
+
+    if (username.length < 3) {
+
+        return {
+            success: false,
             message:
                 "نام کاربری باید حداقل ۳ کاراکتر باشد."
-
         };
 
     }
 
 
-    if (
-        !/^[a-zA-Z0-9_\u0600-\u06FF]+$/.test(
-            cleanUsername
-        )
-    ) {
+    if (!password) {
 
         return {
-
             success: false,
-
             message:
-                "نام کاربری فقط می‌تواند شامل حروف، اعداد و _ باشد."
-
+                "لطفاً رمز عبور را وارد کنید."
         };
 
     }
 
 
-    if (
-        String(password || "").length < 4
-    ) {
+    if (password.length < 6) {
 
         return {
-
             success: false,
-
             message:
-                "رمز عبور باید حداقل ۴ کاراکتر باشد."
-
+                "رمز عبور باید حداقل ۶ کاراکتر باشد."
         };
 
     }
 
 
-    if (
-        password !==
-        passwordConfirm
-    ) {
+    if (password !== confirmPassword) {
 
         return {
-
             success: false,
-
             message:
-                "رمزهای عبور یکسان نیستند."
-
+                "رمزهای عبور با هم یکسان نیستند."
         };
 
     }
 
 
     const users =
-        loadUsers();
+        getUsers();
 
 
-    if (
-        users[normalized]
-    ) {
+    const exists =
+        users.some(
+            user =>
+                user.username.toLowerCase() ===
+                username.toLowerCase()
+        );
+
+
+    if (exists) {
 
         return {
-
             success: false,
-
             message:
                 "این نام کاربری قبلاً ثبت شده است."
-
         };
 
     }
 
 
-    /*
-     * توجه:
-     * این فقط نسخه آزمایشی Frontend است.
-     * در نسخه واقعی رمز عبور نباید به این شکل
-     * در localStorage ذخیره شود.
-     */
+    users.push({
 
-    users[normalized] = {
+        username,
 
-        username:
-            cleanUsername,
+        password
 
-        password:
-            password,
-
-        createdAt:
-            new Date().toISOString()
-
-    };
+    });
 
 
-    saveUsers(
-        users
-    );
+    saveUsers(users);
 
 
     localStorage.setItem(
         CURRENT_USER_KEY,
-        cleanUsername
+        username
     );
 
 
@@ -252,16 +182,12 @@ export function register(
 
         success: true,
 
-        username:
-            cleanUsername,
-
         message:
-            "حساب شما با موفقیت ساخته شد."
+            "ثبت‌نام با موفقیت انجام شد."
 
     };
 
 }
-
 
 
 export function login(
@@ -269,41 +195,39 @@ export function login(
     password
 ) {
 
-
-    const normalized =
-        normalizeUsername(
-            username
-        );
+    username =
+        username.trim();
 
 
-    const users =
-        loadUsers();
-
-
-    const user =
-        users[normalized];
-
-
-    if (
-        !user
-    ) {
+    if (!username || !password) {
 
         return {
 
             success: false,
 
             message:
-                "نام کاربری یا رمز عبور اشتباه است."
+                "نام کاربری و رمز عبور را وارد کنید."
 
         };
 
     }
 
 
-    if (
-        user.password !==
-        password
-    ) {
+    const users =
+        getUsers();
+
+
+    const user =
+        users.find(
+            item =>
+                item.username.toLowerCase() ===
+                    username.toLowerCase() &&
+                item.password ===
+                    password
+        );
+
+
+    if (!user) {
 
         return {
 
@@ -327,9 +251,6 @@ export function login(
 
         success: true,
 
-        username:
-            user.username,
-
         message:
             "ورود با موفقیت انجام شد."
 
@@ -338,21 +259,10 @@ export function login(
 }
 
 
-
 export function logout() {
 
     localStorage.removeItem(
         CURRENT_USER_KEY
-    );
-
-}
-
-
-
-export function getUserList() {
-
-    return Object.values(
-        loadUsers()
     );
 
 }
