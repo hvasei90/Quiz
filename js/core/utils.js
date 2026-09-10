@@ -1,23 +1,44 @@
 export function todayKey() {
 
-    const date = new Date();
+    const date =
+        new Date();
+
 
     return [
+
         date.getFullYear(),
-        String(date.getMonth() + 1).padStart(2, "0"),
-        String(date.getDate()).padStart(2, "0")
+
+        String(
+            date.getMonth() + 1
+        ).padStart(2, "0"),
+
+        String(
+            date.getDate()
+        ).padStart(2, "0")
+
     ].join("-");
 
 }
 
 
-export function daysBetween(dateA, dateB) {
+export function daysBetween(
+    dateA,
+    dateB
+) {
 
-    const a = new Date(dateA);
-    const b = new Date(dateB);
+    const a =
+        new Date(dateA);
+
+
+    const b =
+        new Date(dateB);
+
 
     const difference =
-        Math.abs(b - a);
+        Math.abs(
+            b - a
+        );
+
 
     return Math.floor(
         difference /
@@ -27,12 +48,17 @@ export function daysBetween(dateA, dateB) {
 }
 
 
-export function updateStreak(state) {
+export function updateStreak(
+    state
+) {
 
-    const today = todayKey();
+    const today =
+        todayKey();
 
 
-    if (!state.lastActiveDate) {
+    if (
+        !state.lastActiveDate
+    ) {
 
         state.streak = 1;
 
@@ -61,9 +87,11 @@ export function updateStreak(state) {
         );
 
 
-    if (difference === 1) {
+    if (
+        difference === 1
+    ) {
 
-        state.streak += 1;
+        state.streak++;
 
     } else {
 
@@ -78,7 +106,9 @@ export function updateStreak(state) {
 }
 
 
-export function canClaimDailyReward(state) {
+export function canClaimDailyReward(
+    state
+) {
 
     return (
         state.lastRewardDate !==
@@ -88,9 +118,15 @@ export function canClaimDailyReward(state) {
 }
 
 
-export function claimDailyReward(state) {
+export function claimDailyReward(
+    state
+) {
 
-    if (!canClaimDailyReward(state)) {
+    if (
+        !canClaimDailyReward(
+            state
+        )
+    ) {
 
         return 0;
 
@@ -106,9 +142,12 @@ export function claimDailyReward(state) {
 }
 
 
-export function shuffle(array) {
+export function shuffle(
+    array
+) {
 
-    const result = [...array];
+    const result =
+        [...array];
 
 
     for (
@@ -119,7 +158,8 @@ export function shuffle(array) {
 
         const j =
             Math.floor(
-                Math.random() * (i + 1)
+                Math.random() *
+                (i + 1)
             );
 
 
@@ -139,18 +179,35 @@ export function shuffle(array) {
 }
 
 
-export function escapeHTML(value) {
+export function escapeHTML(
+    value
+) {
 
     return String(value)
 
-        .replaceAll("&", "&amp;")
+        .replaceAll(
+            "&",
+            "&amp;"
+        )
 
-        .replaceAll("<", "&lt;")
+        .replaceAll(
+            "<",
+            "&lt;"
+        )
 
-        .replaceAll(">", "&gt;")
+        .replaceAll(
+            ">",
+            "&gt;"
+        )
 
-        .replaceAll('"', "&quot;")
+        .replaceAll(
+            '"',
+            "&quot;"
+        )
 
-        .replaceAll("'", "&#039;");
+        .replaceAll(
+            "'",
+            "&#039;"
+        );
 
 }
