@@ -2,10 +2,9 @@ import {
     shuffle
 } from "./utils.js";
 
-
 import {
-    hasCompletedStage,
-    markStageCompleted
+    markStageCompleted,
+    isStageCompleted
 } from "./state.js";
 
 
@@ -21,17 +20,12 @@ export const QUIZ_CONFIG = {
 
     comboBonus: 5,
 
-    /*
-     * Heart فقط برای باخت کل مرحله استفاده می‌شود.
-     */
-
-    failedStageHeartPenalty: 1
+    failedStagePenalty: 1
 
 };
 
 
 export class QuizEngine {
-
 
     constructor(
         state,
@@ -40,7 +34,6 @@ export class QuizEngine {
 
         this.state =
             state;
-
 
         this.saveState =
             saveState;
@@ -65,19 +58,14 @@ export class QuizEngine {
 
         this.finished = false;
 
-        /*
-         * آیا این بازی Replay است؟
-         */
-
         this.isReplay = false;
+
+        this.pendingXP = 0;
 
     }
 
 
-
-    async loadCategory(
-        category
-    ) {
+    async loadCategory(category) {
 
         const response =
             await fetch(
@@ -101,74 +89,49 @@ export class QuizEngine {
         this.questions =
             data.questions || [];
 
-
         this.currentCategory =
             category;
 
     }
 
 
-
-    getStageQuestions(
-        stage
-    ) {
+    getStageQuestions(stage) {
 
         return this.questions.filter(
             question =>
-                Number(
-                    question.stage
-                ) ===
-                Number(stage)
+                question.stage === stage
         );
 
     }
 
 
-
     startStage(
         category,
-        stage
+        stage,
+        replay = false
     ) {
 
         this.currentCategory =
             category;
 
-
         this.currentStage =
-            Number(stage);
-
-
-        this.currentQuestion =
-            0;
-
-
-        this.correctAnswers =
-            0;
-
-
-        this.wrongAnswers =
-            0;
-
-
-        this.combo =
-            0;
-
-
-        this.finished =
-            false;
-
-
-        /*
-         * بررسی می‌کنیم که آیا این مرحله
-         * قبلاً با موفقیت تمام شده است.
-         */
+            stage;
 
         this.isReplay =
-            hasCompletedStage(
-                this.state,
-                category,
-                stage
-            );
+            replay;
+
+
+        this.currentQuestion = 0;
+
+        this.correctAnswers = 0;
+
+        this.wrongAnswers = 0;
+
+        this.combo = 0;
+
+        this.pendingXP = 0;
+
+        this.finished = false;
 
 
         const stageQuestions =
@@ -194,7 +157,6 @@ export class QuizEngine {
     }
 
 
-
     getCurrentQuestion() {
 
         return this.selectedQuestions[
@@ -204,7 +166,6 @@ export class QuizEngine {
     }
 
 
-
     getQuestionCount() {
 
         return this.selectedQuestions.length;
@@ -212,14 +173,11 @@ export class QuizEngine {
     }
 
 
-
     getProgress() {
 
-        const total =
-            this.getQuestionCount();
-
-
-        if (!total) {
+        if (
+            this.getQuestionCount() === 0
+        ) {
 
             return 0;
 
@@ -228,16 +186,13 @@ export class QuizEngine {
 
         return (
             this.currentQuestion /
-            total
+            this.getQuestionCount()
         );
 
     }
 
 
-
-    answer(
-        answerIndex
-    ) {
+    answer(answerIndex) {
 
         const question =
             this.getCurrentQuestion();
@@ -249,11 +204,7 @@ export class QuizEngine {
 
                 finished: true,
 
-                correct: false,
-
-                passed: false,
-
-                replay: this.isReplay
+                correct: false
 
             };
 
@@ -261,38 +212,24 @@ export class QuizEngine {
 
 
         const correct =
-            answerIndex !== null &&
             answerIndex ===
-            Number(
-                question.answer
-            );
+            question.answer;
 
 
-        let earnedXP = 0;
+        let questionXP = 0;
 
 
-
-        /*
-         * در Replay:
-         *
-         * پاسخ درست Combo را تغییر می‌دهد
-         * اما XP اضافه نمی‌شود.
-         */
-
-        if (
-            correct
-        ) {
-
+        if (correct) {
 
             this.correctAnswers++;
-
 
             this.combo++;
 
 
             if (
+                !this.isReplay &&
                 this.combo >
-                this.state.bestCombo
+                    this.state.bestCombo
             ) {
 
                 this.state.bestCombo =
@@ -301,49 +238,33 @@ export class QuizEngine {
             }
 
 
-            if (
-                !this.isReplay
-            ) {
-
-                earnedXP =
-                    (
-                        question.xp ||
-                        QUIZ_CONFIG.baseXP
-                    ) +
-                    Math.max(
-                        0,
-                        this.combo - 1
-                    ) *
-                    QUIZ_CONFIG.comboBonus;
+            questionXP =
+                (question.xp ||
+                    QUIZ_CONFIG.baseXP) +
+                Math.max(
+                    0,
+                    this.combo - 1
+                ) *
+                QUIZ_CONFIG.comboBonus;
 
 
-                this.state.xp +=
-                    earnedXP;
+            if (!this.isReplay) {
+
+                this.pendingXP +=
+                    questionXP;
 
             }
 
-
         } else {
-
 
             this.wrongAnswers++;
 
-
             this.combo = 0;
-
-            /*
-             * هیچ Heart اینجا کم نمی‌شود.
-             *
-             * Heart فقط بعد از مشخص شدن
-             * نتیجه کل مرحله کم خواهد شد.
-             */
 
         }
 
 
-
         this.currentQuestion++;
-
 
 
         const finished =
@@ -351,31 +272,19 @@ export class QuizEngine {
             this.selectedQuestions.length;
 
 
-
         let passed = false;
 
         let heartLost = false;
 
-        let stageCompletedNow =
-            false;
+        let earnedXP = 0;
 
 
-
-        if (
-            finished
-        ) {
-
-
-            const total =
-                this.selectedQuestions.length;
-
+        if (finished) {
 
             const percentage =
-                total > 0
-
+                this.selectedQuestions.length
                     ? this.correctAnswers /
-                      total
-
+                      this.selectedQuestions.length
                     : 0;
 
 
@@ -384,32 +293,20 @@ export class QuizEngine {
                 QUIZ_CONFIG.passingPercentage;
 
 
-
             /*
-             * اگر Replay باشد:
-             *
-             * نه XP
-             * نه Heart
-             * نه Unlock
+             * XP فقط وقتی اضافه می‌شود که
+             * کل مرحله با موفقیت تمام شده باشد.
              */
-
             if (
-                this.isReplay
+                passed &&
+                !this.isReplay
             ) {
 
-                stageCompletedNow =
-                    false;
+                earnedXP =
+                    this.pendingXP;
 
-
-            } else if (
-                passed
-            ) {
-
-
-                /*
-                 * اولین بار است که مرحله را
-                 * با موفقیت تمام کرده‌ایم.
-                 */
+                this.state.xp +=
+                    earnedXP;
 
                 markStageCompleted(
                     this.state,
@@ -418,20 +315,10 @@ export class QuizEngine {
                 );
 
 
-                stageCompletedNow =
-                    true;
-
-
-
-                /*
-                 * باز کردن مرحله بعد
-                 */
-
                 if (
                     this.currentCategory ===
                     "general"
                 ) {
-
 
                     if (
                         this.state.generalStage ===
@@ -442,9 +329,7 @@ export class QuizEngine {
 
                     }
 
-
                 } else {
-
 
                     if (
                         this.state.funStage ===
@@ -457,42 +342,33 @@ export class QuizEngine {
 
                 }
 
-
-            } else {
-
-
-                /*
-                 * کل مرحله باخته شده.
-                 *
-                 * فقط یک Heart کم می‌شود.
-                 */
-
-                if (
-                    this.state.hearts > 0
-                ) {
+            }
 
 
-                    this.state.hearts =
-                        Math.max(
-                            0,
-                            this.state.hearts -
-                            QUIZ_CONFIG.failedStageHeartPenalty
-                        );
+            /*
+             * اگر مرحله برای اولین بار
+             * با شکست تمام شود فقط یک قلب کم می‌شود.
+             */
+            if (
+                !passed &&
+                !this.isReplay &&
+                this.state.hearts > 0
+            ) {
 
+                this.state.hearts -=
+                    QUIZ_CONFIG.failedStagePenalty;
 
-                    heartLost =
-                        true;
-
-                }
+                heartLost = true;
 
             }
+
+
+            this.finished = true;
 
         }
 
 
-
         this.saveState();
-
 
 
         return {
@@ -503,14 +379,15 @@ export class QuizEngine {
 
             passed,
 
-            replay:
-                this.isReplay,
+            earnedXP,
+
+            pendingXP:
+                this.pendingXP,
 
             heartLost,
 
-            stageCompletedNow,
-
-            earnedXP,
+            isReplay:
+                this.isReplay,
 
             combo:
                 this.combo,
@@ -526,24 +403,25 @@ export class QuizEngine {
 
             percentage:
                 this.selectedQuestions.length
-
                     ? this.correctAnswers /
                       this.selectedQuestions.length
-
                     : 0,
 
             explanation:
-                question.explanation ||
-                "",
-
-            correctAnswer:
-                question.options[
-                    Number(
-                        question.answer
-                    )
-                ]
+                question.explanation || ""
 
         };
+
+    }
+
+
+    isCompletedStage() {
+
+        return isStageCompleted(
+            this.state,
+            this.currentCategory,
+            this.currentStage
+        );
 
     }
 
