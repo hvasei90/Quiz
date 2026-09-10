@@ -27,6 +27,8 @@
 
 <header class="topbar">
 
+
+    <!-- سمت چپ -->
     <div class="topbar-left">
 
         <div class="logo">
@@ -47,6 +49,8 @@
     </div>
 
 
+
+    <!-- سمت راست -->
     <nav>
 
         <button
@@ -90,6 +94,27 @@
             data-page="chat">
 
             گفتگو
+
+        </button>
+
+
+        <button
+            type="button"
+            data-page="auth"
+            id="authNavButton">
+
+            ورود / ثبت‌نام
+
+        </button>
+
+
+        <button
+            type="button"
+            data-page="auth"
+            id="logoutButton"
+            class="logout-nav-button hidden">
+
+            خروج
 
         </button>
 
@@ -479,7 +504,6 @@
                     15s
 
                 </strong>
-
 
             </div>
 
@@ -880,6 +904,192 @@
                     ارسال
 
                 </button>
+
+
+            </div>
+
+
+        </div>
+
+
+    </section>
+
+
+
+    <!-- =========================
+         AUTH
+    ========================== -->
+
+    <section
+        id="auth"
+        class="page">
+
+
+        <div class="auth-wrapper">
+
+
+            <div class="auth-card">
+
+
+                <div class="auth-header">
+
+                    <p class="eyebrow">
+                        QUIZDUO ACCOUNT
+                    </p>
+
+
+                    <h2>
+                        ورود به QuizDuo
+                    </h2>
+
+
+                    <p>
+                        برای ذخیره پیشرفت و ساخت پروفایل خود
+                        وارد حساب شوید یا ثبت‌نام کنید.
+                    </p>
+
+                </div>
+
+
+
+                <div class="auth-tabs">
+
+
+                    <button
+                        class="auth-tab active"
+                        type="button"
+                        data-auth-tab="login">
+
+                        ورود
+
+                    </button>
+
+
+                    <button
+                        class="auth-tab"
+                        type="button"
+                        data-auth-tab="register">
+
+                        ثبت‌نام
+
+                    </button>
+
+
+                </div>
+
+
+
+                <!-- Login -->
+
+                <form
+                    id="loginForm"
+                    class="auth-form">
+
+
+                    <label for="loginUsername">
+                        نام کاربری
+                    </label>
+
+
+                    <input
+                        id="loginUsername"
+                        type="text"
+                        maxlength="30"
+                        autocomplete="username"
+                        required>
+
+
+                    <label for="loginPassword">
+                        رمز عبور
+                    </label>
+
+
+                    <input
+                        id="loginPassword"
+                        type="password"
+                        maxlength="100"
+                        autocomplete="current-password"
+                        required>
+
+
+                    <button
+                        class="primary-btn"
+                        type="submit">
+
+                        ورود
+
+                    </button>
+
+
+                </form>
+
+
+
+                <!-- Register -->
+
+                <form
+                    id="registerForm"
+                    class="auth-form hidden">
+
+
+                    <label for="registerUsername">
+                        نام کاربری
+                    </label>
+
+
+                    <input
+                        id="registerUsername"
+                        type="text"
+                        maxlength="30"
+                        autocomplete="username"
+                        required>
+
+
+                    <label for="registerPassword">
+                        رمز عبور
+                    </label>
+
+
+                    <input
+                        id="registerPassword"
+                        type="password"
+                        minlength="4"
+                        maxlength="100"
+                        autocomplete="new-password"
+                        required>
+
+
+                    <label for="registerPasswordConfirm">
+                        تکرار رمز عبور
+                    </label>
+
+
+                    <input
+                        id="registerPasswordConfirm"
+                        type="password"
+                        minlength="4"
+                        maxlength="100"
+                        autocomplete="new-password"
+                        required>
+
+
+                    <button
+                        class="primary-btn"
+                        type="submit">
+
+                        ساخت حساب
+
+                    </button>
+
+
+                </form>
+
+
+
+                <div
+                    id="authMessage"
+                    class="auth-message">
+                </div>
 
 
             </div>
