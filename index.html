@@ -1,13 +1,13 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="fa" dir="rtl">
 
 <head>
 
-    <meta charset="UTF-8">
+    <meta charset="utf-8">
 
     <meta
         name="viewport"
-        content="width=device-width, initial-scale=1.0"
+        content="width=device-width,initial-scale=1"
     >
 
     <title>QuizDuo</title>
@@ -21,78 +21,49 @@
 
 <body>
 
-<header class="site-header">
 
-    <div class="topbar-left">
+<header>
 
-        <div class="logo">
-            QuizDuo
-        </div>
-
-        <button
-            id="themeToggle"
-            class="theme-btn"
-            type="button"
-        >
-            ☀️ حالت روشن
-        </button>
-
+    <div class="header-logo">
+        QuizDuo
     </div>
 
 
     <nav>
 
-        <button
-            data-page="home"
-            type="button"
-        >
+        <button data-page="home">
             خانه
         </button>
 
-        <button
-            data-page="quiz"
-            type="button"
-        >
+        <button data-page="quiz">
             سوالات
         </button>
 
-        <button
-            data-page="leaderboard"
-            type="button"
-        >
+        <button data-page="leaderboard">
             لیدربورد
         </button>
 
-        <button
-            data-page="chat"
-            type="button"
-        >
+        <button data-page="chat">
             چت
         </button>
 
-        <button
-            data-page="support"
-            type="button"
-        >
+        <button data-page="support">
             پشتیبانی
         </button>
 
-        <button
-            data-page="profile"
-            type="button"
-        >
+        <button data-page="profile">
             پروفایل
         </button>
 
-        <button
-            id="authButton"
-            class="auth-nav-btn"
-            type="button"
-        >
-            ورود / ثبت‌نام
-        </button>
-
     </nav>
+
+
+    <button
+        id="authButton"
+        class="primary"
+    >
+        ورود / ثبت‌نام
+    </button>
 
 </header>
 
@@ -118,11 +89,10 @@
             </p>
 
             <button
-                class="primary-btn big-btn"
+                class="primary big"
                 data-page="quiz"
-                type="button"
             >
-                شروع بازی
+                شروع
             </button>
 
         </div>
@@ -163,65 +133,10 @@
                 </h3>
 
                 <p>
-                    امتیاز بگیر و پیشرفت کن.
+                    امتیاز بگیر و در لیدربورد بالا برو.
                 </p>
 
             </article>
-
-        </div>
-
-
-        <div class="stats-grid">
-
-            <div class="stat-card">
-
-                <span>
-                    ⭐
-                </span>
-
-                <strong id="homeXP">
-                    0
-                </strong>
-
-                <small>
-                    XP
-                </small>
-
-            </div>
-
-
-            <div class="stat-card">
-
-                <span>
-                    🔥
-                </span>
-
-                <strong id="homeStreak">
-                    0
-                </strong>
-
-                <small>
-                    روز Streak
-                </small>
-
-            </div>
-
-
-            <div class="stat-card">
-
-                <span>
-                    🏅
-                </span>
-
-                <strong id="homeLevel">
-                    1
-                </strong>
-
-                <small>
-                    سطح
-                </small>
-
-            </div>
 
         </div>
 
@@ -236,84 +151,84 @@
         class="page"
     >
 
-        <div class="auth-container">
+        <div class="panel narrow auth-card">
 
-            <div class="auth-card">
+            <div class="auth-icon">
+                👤
+            </div>
 
-                <div class="auth-icon">
-                    👤
-                </div>
+            <h2 id="authTitle">
+                ورود
+            </h2>
 
-                <h2 id="authTitle">
-                    ورود
-                </h2>
-
-                <p class="auth-description">
-                    وارد حساب QuizDuo خودت شو یا یک حساب جدید بساز.
-                </p>
+            <p class="auth-description">
+                وارد حساب خودت شو یا یک حساب جدید بساز.
+            </p>
 
 
-                <label for="authName">
-                    نام کاربری
-                </label>
+            <label for="authName">
+                نام کاربری
+            </label>
 
-                <input
-                    id="authName"
-                    type="text"
-                    autocomplete="username"
-                    placeholder="مثلاً Hasti"
-                >
-
-
-                <label for="authPassword">
-                    رمز عبور
-                </label>
-
-                <input
-                    id="authPassword"
-                    type="password"
-                    autocomplete="current-password"
-                    placeholder="حداقل ۶ کاراکتر"
-                >
+            <input
+                id="authName"
+                type="text"
+                placeholder="نام کاربری"
+                autocomplete="username"
+            >
 
 
-                <label
-                    id="confirmPasswordLabel"
-                    for="authConfirmPassword"
-                >
+            <label for="authPassword">
+                رمز عبور
+            </label>
+
+            <input
+                id="authPassword"
+                type="password"
+                placeholder="رمز عبور"
+                autocomplete="current-password"
+            >
+
+
+            <div
+                id="confirmPasswordBox"
+                class="hidden"
+            >
+
+                <label for="authConfirmPassword">
                     تکرار رمز عبور
                 </label>
 
                 <input
                     id="authConfirmPassword"
-                    class="hidden"
                     type="password"
-                    autocomplete="new-password"
                     placeholder="رمز عبور را دوباره وارد کنید"
+                    autocomplete="new-password"
                 >
-
-
-                <button
-                    id="authSubmit"
-                    class="primary-btn full-btn"
-                    type="button"
-                >
-                    ورود
-                </button>
-
-
-                <button
-                    id="toggleAuth"
-                    class="link-btn"
-                    type="button"
-                >
-                    حساب نداری؟ ثبت‌نام
-                </button>
-
-
-                <p id="authMsg"></p>
 
             </div>
+
+
+            <button
+                id="authSubmit"
+                class="primary full"
+            >
+                ورود
+            </button>
+
+
+            <button
+                id="toggleAuth"
+                class="link full"
+            >
+                ثبت‌نام
+            </button>
+
+
+            <p
+                id="authMsg"
+                class="auth-message"
+            ></p>
 
         </div>
 
@@ -328,16 +243,16 @@
         class="page"
     >
 
-        <div class="section-header">
+        <div class="quiz-header">
 
             <div>
 
                 <h2>
-                    🎯 سوالات
+                    سوالات
                 </h2>
 
                 <p>
-                    مرحله را کامل کن تا XP بگیری.
+                    برای دریافت XP باید کل مرحله را با موفقیت بگذرانی.
                 </p>
 
             </div>
@@ -356,264 +271,34 @@
         </div>
 
 
-        <div class="quiz-tabs">
+        <div class="tabs">
 
             <button
                 class="active"
-                data-category-tab="general"
-                type="button"
+                data-category="general"
             >
-                🧠 اطلاعات عمومی
+                اطلاعات عمومی
             </button>
 
             <button
-                data-category-tab="fun"
-                type="button"
+                data-category="fun"
             >
-                🎮 تفریحی
+                تفریحی
             </button>
 
         </div>
 
 
         <div
-            id="stageList"
-            class="stage-list"
+            id="stages"
+            class="grid"
         ></div>
 
 
         <div
             id="quizBox"
-            class="quiz-box hidden"
-        >
-
-            <div class="quiz-top">
-
-                <span id="quizCategory">
-                    🧠 اطلاعات عمومی
-                </span>
-
-                <span id="questionNumber">
-                    1/2
-                </span>
-
-            </div>
-
-
-            <div class="progress-wrapper">
-
-                <div
-                    id="quizProgress"
-                    class="progress-bar"
-                ></div>
-
-            </div>
-
-
-            <div class="timer-row">
-
-                <span>
-                    ⏱️ زمان
-                </span>
-
-                <strong id="questionTimer">
-                    15s
-                </strong>
-
-            </div>
-
-
-            <div class="timer-track">
-
-                <div
-                    id="timerProgress"
-                    class="timer-progress"
-                ></div>
-
-            </div>
-
-
-            <div class="combo-box">
-
-                🔥 Combo:
-
-                <strong id="comboValue">
-                    0
-                </strong>
-
-            </div>
-
-
-            <div class="question-area">
-
-                <h2 id="questionText">
-                    سوال
-                </h2>
-
-                <div
-                    id="answers"
-                    class="answers"
-                ></div>
-
-            </div>
-
-
-            <div
-                id="quizResult"
-                class="quiz-result"
-            ></div>
-
-
-            <button
-                id="nextQuestionBtn"
-                class="primary-btn full-btn hidden"
-                type="button"
-            >
-                سوال بعدی →
-            </button>
-
-        </div>
-
-    </section>
-
-
-
-    <!-- PROFILE -->
-
-    <section
-        id="profile"
-        class="page"
-    >
-
-        <div class="section-header">
-
-            <div>
-
-                <h2>
-                    👤 پروفایل
-                </h2>
-
-                <p>
-                    آمار و پیشرفت تو
-                </p>
-
-            </div>
-
-        </div>
-
-
-        <div class="profile-card">
-
-            <div
-                id="profileAvatar"
-                class="profile-avatar"
-            >
-                م
-            </div>
-
-            <div>
-
-                <h2 id="profileName">
-                    بازیکن مهمان
-                </h2>
-
-                <span id="profileLevel">
-                    سطح 1
-                </span>
-
-            </div>
-
-        </div>
-
-
-        <div class="stats-grid profile-stats">
-
-            <div class="stat-card">
-
-                <strong id="profileXP">
-                    0
-                </strong>
-
-                <small>
-                    XP
-                </small>
-
-            </div>
-
-
-            <div class="stat-card">
-
-                <strong id="profileStreak">
-                    0
-                </strong>
-
-                <small>
-                    Streak
-                </small>
-
-            </div>
-
-
-            <div class="stat-card">
-
-                <strong id="profileGeneral">
-                    1
-                </strong>
-
-                <small>
-                    مرحله عمومی
-                </small>
-
-            </div>
-
-
-            <div class="stat-card">
-
-                <strong id="profileFun">
-                    1
-                </strong>
-
-                <small>
-                    مرحله تفریحی
-                </small>
-
-            </div>
-
-
-            <div class="stat-card">
-
-                <strong id="profileBestCombo">
-                    0
-                </strong>
-
-                <small>
-                    بهترین Combo
-                </small>
-
-            </div>
-
-        </div>
-
-
-        <div class="panel reward-panel">
-
-            <h3>
-                🎁 جایزه روزانه
-            </h3>
-
-            <p>
-                هر روز می‌توانی جایزه روزانه بگیری.
-            </p>
-
-            <button
-                id="dailyReward"
-                class="primary-btn"
-                type="button"
-            >
-                دریافت 25 XP
-            </button>
-
-        </div>
+            class="panel hidden"
+        ></div>
 
     </section>
 
@@ -631,7 +316,7 @@
         </h2>
 
 
-        <div class="panel table-wrapper">
+        <div class="panel">
 
             <table>
 
@@ -648,7 +333,7 @@
                         </th>
 
                         <th>
-                            XP
+                            امتیاز
                         </th>
 
                         <th>
@@ -659,7 +344,10 @@
 
                 </thead>
 
-                <tbody id="leaderboardBody"></tbody>
+
+                <tbody
+                    id="leaderBody"
+                ></tbody>
 
             </table>
 
@@ -669,85 +357,86 @@
 
 
 
-    <!-- CHAT -->
+    <!-- PROFILE -->
 
     <section
-        id="chat"
+        id="profile"
         class="page"
     >
 
         <h2>
-            💬 چت
+            پروفایل
         </h2>
 
 
-        <div class="panel chat-panel">
-
-            <div
-                id="messages"
-                class="messages"
-            ></div>
+        <div class="grid">
 
 
-            <div class="chat-input-row">
+            <div class="panel">
 
-                <input
-                    id="chatInput"
-                    placeholder="پیام..."
-                >
+                <div class="profile-avatar">
+                    👤
+                </div>
+
+                <h3 id="profileName">
+                    مهمان
+                </h3>
+
+                <p>
+                    XP:
+                    <b id="profileScore">
+                        0
+                    </b>
+                </p>
+
+                <p>
+                    Streak:
+                    <b id="profileStreak">
+                        0
+                    </b>
+                    روز
+                </p>
+
+                <p>
+                    بالاترین مرحله:
+                    <b id="profileStage">
+                        1
+                    </b>
+                </p>
+
+                <p>
+                    قلب:
+                    ❤️
+                    <b id="profileHearts">
+                        5
+                    </b>
+                </p>
+
+            </div>
+
+
+            <div class="panel">
+
+                <h3>
+                    اشتراک
+                </h3>
+
+                <p>
+                    وضعیت:
+                    <b id="subscription">
+                        رایگان
+                    </b>
+                </p>
 
                 <button
-                    id="sendChat"
-                    class="primary-btn"
-                    type="button"
+                    class="primary"
+                    data-page="subscription"
                 >
-                    ارسال
+                    مشاهده پلن‌ها
                 </button>
 
             </div>
 
-        </div>
-
-    </section>
-
-
-
-    <!-- SUPPORT -->
-
-    <section
-        id="support"
-        class="page"
-    >
-
-        <h2>
-            🎫 پشتیبانی
-        </h2>
-
-
-        <div class="panel narrow-panel">
-
-            <input
-                id="supportSubject"
-                placeholder="موضوع"
-            >
-
-
-            <textarea
-                id="supportText"
-                placeholder="پیام خودت را بنویس..."
-            ></textarea>
-
-
-            <button
-                id="supportSend"
-                class="primary-btn full-btn"
-                type="button"
-            >
-                ارسال
-            </button>
-
-
-            <p id="supportMsg"></p>
 
         </div>
 
@@ -763,11 +452,12 @@
     >
 
         <h2>
-            💎 اشتراک
+            اشتراک
         </h2>
 
 
         <div class="grid">
+
 
             <div class="panel">
 
@@ -797,11 +487,55 @@
                 </p>
 
                 <button
+                    class="primary"
                     id="buyButton"
-                    class="primary-btn"
-                    type="button"
                 >
                     انتخاب پلن
+                </button>
+
+            </div>
+
+
+        </div>
+
+
+        <p class="muted">
+            پرداخت واقعی در نسخه اولیه فعال نیست و بعداً به Backend امن متصل می‌شود.
+        </p>
+
+    </section>
+
+
+
+    <!-- CHAT -->
+
+    <section
+        id="chat"
+        class="page"
+    >
+
+        <h2>
+            💬 چت
+        </h2>
+
+
+        <div class="panel chat">
+
+            <div id="messages"></div>
+
+
+            <div class="row">
+
+                <input
+                    id="chatInput"
+                    placeholder="پیام..."
+                >
+
+                <button
+                    id="sendChat"
+                    class="primary"
+                >
+                    ارسال
                 </button>
 
             </div>
@@ -809,6 +543,49 @@
         </div>
 
     </section>
+
+
+
+    <!-- SUPPORT -->
+
+    <section
+        id="support"
+        class="page"
+    >
+
+        <h2>
+            🎫 پشتیبانی
+        </h2>
+
+
+        <div class="panel narrow">
+
+            <input
+                id="supportSubject"
+                placeholder="موضوع"
+            >
+
+
+            <textarea
+                id="supportText"
+                placeholder="پیام"
+            ></textarea>
+
+
+            <button
+                id="supportSend"
+                class="primary full"
+            >
+                ارسال
+            </button>
+
+
+            <p id="supportMsg"></p>
+
+        </div>
+
+    </section>
+
 
 </main>
 
@@ -818,10 +595,7 @@
 </footer>
 
 
-<script
-    type="module"
-    src="js/core/app.js"
-></script>
+<script src="js/core/app.js"></script>
 
 </body>
 
