@@ -10,13 +10,25 @@ export const DEFAULT_STATE = {
 
     lastActiveDate: null,
 
+    lastRewardDate: null,
+
     generalStage: 1,
 
     funStage: 1,
 
     currentCategory: "general",
 
-    subscription: "free"
+    subscription: "free",
+
+    hearts: 5,
+
+    maxHearts: 5,
+
+    combo: 0,
+
+    bestCombo: 0,
+
+    theme: "dark"
 
 };
 
@@ -39,7 +51,8 @@ export function addXP(state, amount) {
 
     state.xp += amount;
 
-    state.level = calculateLevel(state.xp);
+    state.level =
+        calculateLevel(state.xp);
 
 }
 
@@ -47,7 +60,9 @@ export function addXP(state, amount) {
 export function getCurrentStage(state, category) {
 
     if (category === "general") {
+
         return state.generalStage;
+
     }
 
     return state.funStage;
