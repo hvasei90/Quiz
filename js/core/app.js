@@ -1,166 +1,109 @@
-const QuizDuo = {
+import {
+    DEFAULT_STATE,
+    calculateLevel,
+    isStageCompleted
+} from "./state.js";
 
-    state: {
+import {
+    loadState,
+    saveState
+} from "./storage.js";
 
-        user: null,
+import {
+    updateStreak,
+    claimDailyReward,
+    canClaimDailyReward,
+    escapeHTML
+} from "./utils.js";
 
-        score: 0,
+import {
+    QuizEngine,
+    QUIZ_CONFIG
+} from "./quiz.js";
 
-        generalStage: 1,
-
-        funStage: 1,
-
-        completedGeneralStages: [],
-
-        completedFunStages: [],
-
-        streak: 0,
-
-        hearts: 5,
-
-        maxHearts: 5,
-
-        subscription: "رایگان"
-
-    },
-
-
-    category: "general",
-
-    currentStage: 0,
-
-    currentQuestion: 0,
-
-    stageQuestions: [],
-
-    stageCorrect: 0,
-
-    stageFinished: false,
-
-    replayMode: false,
+import {
+    getCurrentUser,
+    isLoggedIn,
+    register,
+    login,
+    logout
+} from "./auth.js";
 
 
-    save() {
-
-        localStorage.setItem(
-            "quizduo_state",
-            JSON.stringify(this.state)
-        );
-
-    },
+const currentUser =
+    getCurrentUser() || "guest";
 
 
-    load() {
-
-        try {
-
-            const saved =
-                JSON.parse(
-                    localStorage.getItem(
-                        "quizduo_state"
-                    )
-                );
+const state =
+    loadState(
+        DEFAULT_STATE,
+        currentUser
+    );
 
 
-            if (saved) {
+if (
+    currentUser !== "guest"
+) {
 
-                this.state = {
+    state.username =
+        currentUser;
 
-                    ...this.state,
-
-                    ...saved
-
-                };
-
-
-                if (
-                    !Array.isArray(
-                        this.state.completedGeneralStages
-                    )
-                ) {
-
-                    this.state.completedGeneralStages = [];
-
-                }
+}
 
 
-                if (
-                    !Array.isArray(
-                        this.state.completedFunStages
-                    )
-                ) {
+const quiz =
+    new QuizEngine(
+        state,
+        () =>
+            saveState(
+                state,
+                currentUser
+            )
+    );
 
-                    this.state.completedFunStages = [];
 
-                }
+const app = {
 
-            }
+    category:
+        state.currentCategory ||
+        "general",
 
-        } catch (error) {
+    timer: null,
 
-            console.error(
-                "Could not load QuizDuo state:",
-                error
-            );
+    timeLeft: 0,
 
-        }
+    currentAnswerLocked: false,
+
+    authMode: "login",
+
+
+    async init() {
+
+        this.applyTheme();
+
+        this.bindNavigation();
+
+        this.bindQuizTabs();
+
+        this.bindCategoryButtons();
+
+        this.bindThemeButton();
+
+        this.bindDailyReward();
+
+        this.bindAuth();
+
+        this.renderAuthState();
+
+        this.renderAll();
+
+        await this.loadQuiz();
 
     },
 
 
-    go(id) {
+    bindNavigation() {
 
-        document
-            .querySelectorAll(".page")
-            .forEach(
-                page =>
-                    page.classList.remove(
-                        "active"
-                    )
-            );
-
-
-        const page =
-            document.getElementById(id);
-
-
-        if (!page) {
-
-            return;
-
-        }
-
-
-        page.classList.add("active");
-
-
-        if (id === "quiz") {
-
-            Quiz.renderStages();
-
-        }
-
-
-        if (id === "leaderboard") {
-
-            Leaderboard.render();
-
-        }
-
-
-        Profile.render();
-
-    },
-
-
-    init() {
-
-        this.load();
-
-
-        /*
-         * تمام دکمه‌های navigation
-         */
         document
             .querySelectorAll(
                 "[data-page]"
@@ -169,10 +112,32 @@ const QuizDuo = {
 
                 button.addEventListener(
                     "click",
-                    () => {
+                    async () => {
 
-                        this.go(
-                            button.dataset.page
+                        const page =
+                            button.dataset.page;
+
+
+                        if (
+                            button.dataset.category
+                        ) {
+
+                            this.category =
+                                button.dataset.category;
+
+                            state.currentCategory =
+                                this.category;
+
+                            saveState(
+                                state,
+                                currentUser
+                            );
+
+                        }
+
+
+                        this.showPage(
+                            page
                         );
 
                     }
@@ -181,9 +146,6 @@ const QuizDuo = {
             });
 
 
-        /*
-         * ورود / ثبت‌نام
-         */
         const authButton =
             document.getElementById(
                 "authButton"
@@ -196,292 +158,1280 @@ const QuizDuo = {
                 "click",
                 () => {
 
-                    Auth.open();
+                    if (
+                        isLoggedIn()
+                    ) {
+
+                        if (
+                            confirm(
+                                "آیا می‌خواهی از حساب کاربری خارج شوی؟"
+                            )
+                        ) {
+
+                            logout();
+
+                            location.reload();
+
+                        }
+
+                    } else {
+
+                        this.showPage(
+                            "auth"
+                        );
+
+                    }
 
                 }
             );
 
         }
 
+    },
 
-        /*
-         * خرید اشتراک
-         */
-        const buyButton =
+
+    showPage(page) {
+
+        document
+            .querySelectorAll(".page")
+            .forEach(section => {
+
+                section.classList.remove(
+                    "active"
+                );
+
+            });
+
+
+        const target =
             document.getElementById(
-                "buyButton"
+                page
             );
 
 
-        if (buyButton) {
+        if (target) {
 
-            buyButton.addEventListener(
+            target.classList.add(
+                "active"
+            );
+
+        }
+
+
+        if (page === "quiz") {
+
+            this.renderStages();
+
+        }
+
+    },
+
+
+    bindQuizTabs() {
+
+        document
+            .querySelectorAll(
+                "[data-category-tab]"
+            )
+            .forEach(button => {
+
+                button.addEventListener(
+                    "click",
+                    async () => {
+
+                        this.category =
+                            button.dataset.categoryTab;
+
+                        state.currentCategory =
+                            this.category;
+
+
+                        document
+                            .querySelectorAll(
+                                "[data-category-tab]"
+                            )
+                            .forEach(tab => {
+
+                                tab.classList.remove(
+                                    "active"
+                                );
+
+                            });
+
+
+                        button.classList.add(
+                            "active"
+                        );
+
+
+                        saveState(
+                            state,
+                            currentUser
+                        );
+
+
+                        await this.loadQuiz();
+
+                    }
+                );
+
+            });
+
+    },
+
+
+    bindCategoryButtons() {
+
+        document
+            .querySelectorAll(
+                "[data-category]"
+            )
+            .forEach(button => {
+
+                button.addEventListener(
+                    "click",
+                    async () => {
+
+                        this.category =
+                            button.dataset.category;
+
+                        state.currentCategory =
+                            this.category;
+
+
+                        this.showPage(
+                            "quiz"
+                        );
+
+
+                        await this.loadQuiz();
+
+                    }
+                );
+
+            });
+
+    },
+
+
+    async loadQuiz() {
+
+        try {
+
+            await quiz.loadCategory(
+                this.category
+            );
+
+
+            this.renderStages();
+
+        } catch (error) {
+
+            console.error(error);
+
+        }
+
+    },
+
+
+    getUnlockedStage() {
+
+        return this.category ===
+            "general"
+
+            ? state.generalStage
+
+            : state.funStage;
+
+    },
+
+
+    renderStages() {
+
+        const container =
+            document.getElementById(
+                "stageList"
+            );
+
+
+        if (!container) return;
+
+
+        const unlocked =
+            this.getUnlockedStage();
+
+
+        container.innerHTML = "";
+
+
+        for (
+            let stage = 1;
+            stage <= 10;
+            stage++
+        ) {
+
+            const locked =
+                stage > unlocked;
+
+
+            const completed =
+                isStageCompleted(
+                    state,
+                    this.category,
+                    stage
+                );
+
+
+            const card =
+                document.createElement(
+                    "button"
+                );
+
+
+            card.type =
+                "button";
+
+
+            card.className =
+                `stage-card ${
+                    locked
+                        ? "locked"
+                        : ""
+                } ${
+                    completed
+                        ? "completed"
+                        : ""
+                }`;
+
+
+            let statusText;
+
+
+            if (locked) {
+
+                statusText =
+                    "قفل است 🔒";
+
+            } else if (completed) {
+
+                statusText =
+                    "این مرحله را بردی ✓";
+
+            } else {
+
+                statusText =
+                    "آماده بازی";
+
+            }
+
+
+            card.innerHTML = `
+
+                <span class="stage-number">
+                    ${
+                        locked
+                            ? "🔒"
+                            : completed
+                                ? "✓"
+                                : stage
+                    }
+                </span>
+
+                <span class="stage-info">
+
+                    <strong>
+                        مرحله ${stage}
+                    </strong>
+
+                    <small>
+                        ${statusText}
+                    </small>
+
+                </span>
+
+            `;
+
+
+            if (!locked) {
+
+                card.addEventListener(
+                    "click",
+                    () =>
+                        this.startStage(
+                            stage
+                        )
+                );
+
+            }
+
+
+            container.appendChild(
+                card
+            );
+
+        }
+
+    },
+
+
+    async startStage(stage) {
+
+        await quiz.loadCategory(
+            this.category
+        );
+
+
+        const completed =
+            isStageCompleted(
+                state,
+                this.category,
+                stage
+            );
+
+
+        const isPreviousStage =
+            stage <
+            this.getUnlockedStage();
+
+
+        let replay =
+            completed ||
+            isPreviousStage;
+
+
+        if (replay) {
+
+            const confirmed =
+                confirm(
+                    "شما قبلاً امتیاز این مرحله را کسب کرده‌اید.\n\n" +
+                    "آیا مایلید دوباره این مرحله را بازی کنید؟\n\n" +
+                    "بازی کردن در این مرحله نه از شما قلب کم می‌کند " +
+                    "و نه به شما امتیاز اضافه می‌کند."
+                );
+
+
+            if (!confirmed) {
+
+                return;
+
+            }
+
+        }
+
+
+        quiz.startStage(
+            this.category,
+            stage,
+            replay
+        );
+
+
+        this.currentAnswerLocked =
+            false;
+
+
+        this.showPage(
+            "quiz"
+        );
+
+
+        this.renderQuestion();
+
+    },
+
+
+    renderQuestion() {
+
+        const question =
+            quiz.getCurrentQuestion();
+
+
+        const box =
+            document.getElementById(
+                "quizBox"
+            );
+
+
+        if (!box) return;
+
+
+        if (!question) {
+
+            box.classList.add(
+                "hidden"
+            );
+
+            return;
+
+        }
+
+
+        box.classList.remove(
+            "hidden"
+        );
+
+
+        document.getElementById(
+            "quizCategory"
+        ).textContent =
+            this.category ===
+            "general"
+
+                ? "🧠 اطلاعات عمومی"
+
+                : "🎮 تفریحی";
+
+
+        document.getElementById(
+            "questionNumber"
+        ).textContent =
+            `${quiz.currentQuestion + 1}/${quiz.getQuestionCount()}`;
+
+
+        document.getElementById(
+            "questionText"
+        ).textContent =
+            question.question;
+
+
+        const progress =
+            (
+                quiz.currentQuestion /
+                quiz.getQuestionCount()
+            ) * 100;
+
+
+        document.getElementById(
+            "quizProgress"
+        ).style.width =
+            `${progress}%`;
+
+
+        const answers =
+            document.getElementById(
+                "answers"
+            );
+
+
+        answers.innerHTML = "";
+
+
+        question.options.forEach(
+            (option, index) => {
+
+                const button =
+                    document.createElement(
+                        "button"
+                    );
+
+
+                button.type =
+                    "button";
+
+
+                button.className =
+                    "answer-btn";
+
+
+                button.textContent =
+                    option;
+
+
+                button.addEventListener(
+                    "click",
+                    () =>
+                        this.submitAnswer(
+                            index
+                        )
+                );
+
+
+                answers.appendChild(
+                    button
+                );
+
+            }
+        );
+
+
+        document
+            .getElementById(
+                "quizResult"
+            )
+            .innerHTML = "";
+
+
+        document
+            .getElementById(
+                "nextQuestionBtn"
+            )
+            .classList.add(
+                "hidden"
+            );
+
+
+        this.updateCombo();
+
+        this.startTimer();
+
+    },
+
+
+    startTimer() {
+
+        this.stopTimer();
+
+
+        this.timeLeft =
+            QUIZ_CONFIG.questionTime;
+
+
+        this.updateTimer();
+
+
+        this.timer =
+            setInterval(
+                () => {
+
+                    this.timeLeft--;
+
+                    this.updateTimer();
+
+
+                    if (
+                        this.timeLeft <= 0
+                    ) {
+
+                        this.stopTimer();
+
+                        this.submitAnswer(
+                            null
+                        );
+
+                    }
+
+                },
+                1000
+            );
+
+    },
+
+
+    stopTimer() {
+
+        if (this.timer) {
+
+            clearInterval(
+                this.timer
+            );
+
+            this.timer = null;
+
+        }
+
+    },
+
+
+    updateTimer() {
+
+        const timer =
+            document.getElementById(
+                "questionTimer"
+            );
+
+
+        if (!timer) return;
+
+
+        timer.textContent =
+            `${this.timeLeft}s`;
+
+
+        const percentage =
+            (
+                this.timeLeft /
+                QUIZ_CONFIG.questionTime
+            ) * 100;
+
+
+        const progress =
+            document.getElementById(
+                "timerProgress"
+            );
+
+
+        if (progress) {
+
+            progress.style.width =
+                `${percentage}%`;
+
+        }
+
+    },
+
+
+    submitAnswer(index) {
+
+        if (
+            this.currentAnswerLocked
+        ) {
+
+            return;
+
+        }
+
+
+        this.currentAnswerLocked =
+            true;
+
+
+        this.stopTimer();
+
+
+        const result =
+            quiz.answer(index);
+
+
+        const buttons =
+            document.querySelectorAll(
+                ".answer-btn"
+            );
+
+
+        buttons.forEach(button => {
+
+            button.disabled = true;
+
+        });
+
+
+        const resultBox =
+            document.getElementById(
+                "quizResult"
+            );
+
+
+        if (result.correct) {
+
+            resultBox.innerHTML = `
+
+                <div class="result-success">
+
+                    <strong>
+                        ✓ درست!
+                    </strong>
+
+                    ${
+                        result.finished
+                            ? `
+                                <span>
+                                    نتیجه در پایان مرحله محاسبه می‌شود.
+                                </span>
+                            `
+                            : `
+                                <span>
+                                    پاسخ درست بود!
+                                </span>
+                            `
+                    }
+
+                </div>
+
+            `;
+
+        } else {
+
+            resultBox.innerHTML = `
+
+                <div class="result-error">
+
+                    <strong>
+                        ${
+                            index === null
+                                ? "⏰ زمان تمام شد!"
+                                : "✕ پاسخ نادرست"
+                        }
+                    </strong>
+
+                    <span>
+                        این اشتباه به‌تنهایی قلبی کم نمی‌کند.
+                    </span>
+
+                </div>
+
+            `;
+
+        }
+
+
+        if (result.explanation) {
+
+            resultBox.innerHTML += `
+
+                <p class="explanation">
+                    ${escapeHTML(
+                        result.explanation
+                    )}
+                </p>
+
+            `;
+
+        }
+
+
+        this.updateCombo();
+
+        this.renderAll();
+
+
+        const nextButton =
+            document.getElementById(
+                "nextQuestionBtn"
+            );
+
+
+        nextButton.classList.remove(
+            "hidden"
+        );
+
+
+        nextButton.textContent =
+            result.finished
+                ? "مشاهده نتیجه مرحله"
+                : "سؤال بعدی →";
+
+
+        nextButton.onclick =
+            () => {
+
+                if (result.finished) {
+
+                    this.showStageResult(
+                        result
+                    );
+
+                } else {
+
+                    this.currentAnswerLocked =
+                        false;
+
+                    this.renderQuestion();
+
+                }
+
+            };
+
+    },
+
+
+    showStageResult(result) {
+
+        this.stopTimer();
+
+
+        /*
+         * Streak فقط با بردن کامل مرحله
+         * تغییر می‌کند.
+         */
+        if (
+            result.passed &&
+            !result.isReplay
+        ) {
+
+            updateStreak(
+                state
+            );
+
+            saveState(
+                state,
+                currentUser
+            );
+
+        }
+
+
+        const box =
+            document.getElementById(
+                "quizBox"
+            );
+
+
+        const percentage =
+            Math.round(
+                result.percentage *
+                100
+            );
+
+
+        const passed =
+            result.passed;
+
+
+        let message;
+
+
+        if (
+            result.isReplay
+        ) {
+
+            message = `
+
+                <p class="result-message replay-message">
+                    🔄 این مرحله را قبلاً برده بودی.
+                    <br>
+                    این بار نه XP گرفتی و نه قلبی از دست دادی.
+                </p>
+
+            `;
+
+        } else if (passed) {
+
+            message = `
+
+                <p class="result-message success-message">
+
+                    🎉 مرحله را بردی!
+                    <br>
+                    <strong>
+                        +${result.earnedXP} XP
+                    </strong>
+                    به امتیازت اضافه شد.
+
+                    <br><br>
+
+                    مرحله بعد برایت باز شد!
+
+                </p>
+
+            `;
+
+        } else {
+
+            message = `
+
+                <p class="result-message fail-message">
+
+                    این مرحله را نبردی.
+
+                    <br><br>
+
+                    ${
+                        result.heartLost
+                            ? "❤️ یک قلب از دست دادی."
+                            : "❤️ قلبی از دست نرفت."
+                    }
+
+                    <br>
+
+                    XP این مرحله هم اضافه نشد.
+
+                    <br><br>
+
+                    دوباره تلاش کن!
+
+                </p>
+
+            `;
+
+        }
+
+
+        box.innerHTML = `
+
+            <div class="stage-result">
+
+                <div class="stage-result-icon">
+                    ${
+                        passed
+                            ? "🎉"
+                            : "📚"
+                    }
+                </div>
+
+                <h2>
+                    ${
+                        result.isReplay
+                            ? "بازی مجدد مرحله"
+                            : passed
+                                ? "مرحله را با موفقیت گذراندی!"
+                                : "این مرحله هنوز کامل نشده"
+                    }
+                </h2>
+
+                <div class="result-score">
+                    ${percentage}%
+                </div>
+
+                <p>
+                    ${result.correctAnswers}
+                    پاسخ درست از
+                    ${result.total}
+                    سؤال
+                </p>
+
+                ${message}
+
+                <button
+                    class="primary-btn"
+                    id="closeResult">
+
+                    بازگشت به مراحل
+
+                </button>
+
+            </div>
+
+        `;
+
+
+        document
+            .getElementById(
+                "closeResult"
+            )
+            .onclick =
+            () => {
+
+                this.renderStages();
+
+                box.classList.add(
+                    "hidden"
+                );
+
+            };
+
+    },
+
+
+    updateCombo() {
+
+        const combo =
+            document.getElementById(
+                "comboValue"
+            );
+
+
+        if (!combo) return;
+
+
+        combo.textContent =
+            quiz.combo;
+
+    },
+
+
+    renderAll() {
+
+        state.level =
+            calculateLevel(
+                state.xp
+            );
+
+
+        const elements = {
+
+            homeXP:
+                state.xp,
+
+            homeStreak:
+                state.streak,
+
+            homeLevel:
+                state.level,
+
+            quizXP:
+                state.xp,
+
+            quizStreak:
+                state.streak,
+
+            heartValue:
+                state.hearts
+
+        };
+
+
+        Object.entries(
+            elements
+        ).forEach(
+            ([id, value]) => {
+
+                const element =
+                    document.getElementById(
+                        id
+                    );
+
+
+                if (element) {
+
+                    element.textContent =
+                        value;
+
+                }
+
+            }
+        );
+
+
+        this.renderProfile();
+
+        this.renderLeaderboard();
+
+        this.renderAuthState();
+
+        saveState(
+            state,
+            currentUser
+        );
+
+    },
+
+
+    renderProfile() {
+
+        const name =
+            state.username ||
+            "بازیکن مهمان";
+
+
+        const values = {
+
+            profileName:
+                name,
+
+            profileLevel:
+                `سطح ${state.level}`,
+
+            profileXP:
+                state.xp,
+
+            profileStreak:
+                state.streak,
+
+            profileGeneral:
+                state.generalStage,
+
+            profileFun:
+                state.funStage,
+
+            profileBestCombo:
+                state.bestCombo
+
+        };
+
+
+        Object.entries(
+            values
+        ).forEach(
+            ([id, value]) => {
+
+                const element =
+                    document.getElementById(
+                        id
+                    );
+
+
+                if (element) {
+
+                    element.textContent =
+                        value;
+
+                }
+
+            }
+        );
+
+
+        const avatar =
+            document.getElementById(
+                "profileAvatar"
+            );
+
+
+        if (avatar) {
+
+            avatar.textContent =
+                name
+                    .charAt(0)
+                    .toUpperCase();
+
+        }
+
+    },
+
+
+    renderLeaderboard() {
+
+        const body =
+            document.getElementById(
+                "leaderboardBody"
+            );
+
+
+        if (!body) return;
+
+
+        body.innerHTML = `
+
+            <tr>
+
+                <td>1</td>
+
+                <td>
+                    ${escapeHTML(
+                        state.username
+                    )}
+                </td>
+
+                <td>
+                    ${state.xp}
+                </td>
+
+                <td>
+                    ${
+                        Math.max(
+                            state.generalStage,
+                            state.funStage
+                        )
+                    }
+                </td>
+
+            </tr>
+
+        `;
+
+    },
+
+
+    bindThemeButton() {
+
+        const button =
+            document.getElementById(
+                "themeToggle"
+            );
+
+
+        if (!button) return;
+
+
+        button.addEventListener(
+            "click",
+            () => {
+
+                state.theme =
+                    state.theme === "dark"
+                        ? "light"
+                        : "dark";
+
+
+                saveState(
+                    state,
+                    currentUser
+                );
+
+                this.applyTheme();
+
+            }
+        );
+
+    },
+
+
+    applyTheme() {
+
+        document.documentElement
+            .setAttribute(
+                "data-theme",
+                state.theme
+            );
+
+
+        const button =
+            document.getElementById(
+                "themeToggle"
+            );
+
+
+        if (button) {
+
+            button.textContent =
+                state.theme === "dark"
+                    ? "☀️ حالت روشن"
+                    : "🌙 حالت تاریک";
+
+        }
+
+    },
+
+
+    bindDailyReward() {
+
+        const button =
+            document.getElementById(
+                "dailyReward"
+            );
+
+
+        if (!button) return;
+
+
+        if (
+            canClaimDailyReward(
+                state
+            )
+        ) {
+
+            button.disabled = false;
+
+
+            button.addEventListener(
                 "click",
                 () => {
 
+                    const reward =
+                        claimDailyReward(
+                            state
+                        );
+
+
+                    state.xp +=
+                        reward;
+
+
+                    state.level =
+                        calculateLevel(
+                            state.xp
+                        );
+
+
+                    saveState(
+                        state,
+                        currentUser
+                    );
+
+
+                    this.renderAll();
+
+
                     alert(
-                        "پرداخت واقعی در نسخه بعدی به Backend امن متصل می‌شود."
+                        `🎁 ${reward} XP جایزه روزانه گرفتی!`
                     );
 
                 }
             );
 
-        }
+        } else {
 
+            button.disabled = true;
 
-        Auth.init();
-
-        Quiz.init();
-
-        Leaderboard.init();
-
-        Chat.init();
-
-        Support.init();
-
-        Profile.render();
-
-        this.go("home");
-
-    }
-
-};
-
-
-
-/* =========================
-   QUESTIONS
-========================= */
-
-const QUESTIONS = {
-
-    general: [
-
-        {
-
-            q:
-                "پایتخت ژاپن کدام است؟",
-
-            o:
-                [
-                    "توکیو",
-                    "سئول",
-                    "پکن",
-                    "بانکوک"
-                ],
-
-            a: 0,
-
-            xp: 50
-
-        },
-
-
-        {
-
-            q:
-                "بزرگ‌ترین سیاره منظومه شمسی کدام است؟",
-
-            o:
-                [
-                    "زمین",
-                    "مشتری",
-                    "مریخ",
-                    "زهره"
-                ],
-
-            a: 1,
-
-            xp: 50
-
-        },
-
-
-        {
-
-            q:
-                "بزرگ‌ترین اقیانوس جهان کدام است؟",
-
-            o:
-                [
-                    "اطلس",
-                    "هند",
-                    "آرام",
-                    "منجمد شمالی"
-                ],
-
-            a: 2,
-
-            xp: 50
-
-        },
-
-
-        {
-
-            q:
-                "آب در فشار معمولی در چند درجه سلسیوس می‌جوشد؟",
-
-            o:
-                [
-                    "50",
-                    "80",
-                    "100",
-                    "120"
-                ],
-
-            a: 2,
-
-            xp: 50
-
-        },
-
-
-        {
-
-            q:
-                "واحد جریان الکتریکی چیست؟",
-
-            o:
-                [
-                    "ولت",
-                    "آمپر",
-                    "اهم",
-                    "وات"
-                ],
-
-            a: 1,
-
-            xp: 50
+            button.textContent =
+                "✓ جایزه امروز دریافت شده";
 
         }
 
-    ],
+    },
 
 
-    fun: [
-
-        {
-
-            q:
-                "کدام حیوان معمولاً «بهترین دوست انسان» نامیده می‌شود؟",
-
-            o:
-                [
-                    "گربه",
-                    "سگ",
-                    "اسب",
-                    "خرگوش"
-                ],
-
-            a: 1,
-
-            xp: 50
-
-        },
-
-
-        {
-
-            q:
-                "در شطرنج کدام مهره حرکت L شکل دارد؟",
-
-            o:
-                [
-                    "فیل",
-                    "رخ",
-                    "اسب",
-                    "وزیر"
-                ],
-
-            a: 2,
-
-            xp: 50
-
-        },
-
-
-        {
-
-            q:
-                "کدام مورد بازی ویدیویی است؟",
-
-            o:
-                [
-                    "Minecraft",
-                    "Photoshop",
-                    "Excel",
-                    "Chrome"
-                ],
-
-            a: 0,
-
-            xp: 50
-
-        },
-
-
-        {
-
-            q:
-                "کدام مورد ساز موسیقی است؟",
-
-            o:
-                [
-                    "ویولن",
-                    "تلسکوپ",
-                    "میکروسکوپ",
-                    "قطب‌نما"
-                ],
-
-            a: 0,
-
-            xp: 50
-
-        },
-
-
-        {
-
-            q:
-                "ترکیب آبی و زرد چه رنگی می‌سازد؟",
-
-            o:
-                [
-                    "بنفش",
-                    "سبز",
-                    "نارنجی",
-                    "صورتی"
-                ],
-
-            a: 1,
-
-            xp: 50
-
-        }
-
-    ]
-
-};
-
-
-
-/* =========================
-   AUTH
-========================= */
-
-const Auth = {
-
-    registerMode: false,
-
-
-    init() {
-
-        const toggle =
-            document.getElementById(
-                "toggleAuth"
-            );
-
+    bindAuth() {
 
         const submit =
             document.getElementById(
@@ -489,21 +1439,10 @@ const Auth = {
             );
 
 
-        if (toggle) {
-
-            toggle.addEventListener(
-                "click",
-                () => {
-
-                    this.registerMode =
-                        !this.registerMode;
-
-                    this.render();
-
-                }
+        const toggle =
+            document.getElementById(
+                "toggleAuth"
             );
-
-        }
 
 
         if (submit) {
@@ -512,7 +1451,7 @@ const Auth = {
                 "click",
                 () => {
 
-                    this.submit();
+                    this.submitAuth();
 
                 }
             );
@@ -520,18 +1459,48 @@ const Auth = {
         }
 
 
+        if (toggle) {
+
+            toggle.addEventListener(
+                "click",
+                () => {
+
+                    this.authMode =
+                        this.authMode === "login"
+                            ? "register"
+                            : "login";
+
+
+                    this.renderAuthForm();
+
+                }
+            );
+
+        }
+
+
+        const password =
+            document.getElementById(
+                "authPassword"
+            );
+
+
+        const confirmPassword =
+            document.getElementById(
+                "authConfirmPassword"
+            );
+
+
         [
-            "authName",
-            "authPassword",
-            "authConfirmPassword"
+            document.getElementById(
+                "authName"
+            ),
+            password,
+            confirmPassword
         ]
-            .forEach(id => {
-
-                const input =
-                    document.getElementById(id);
-
-
-                if (input) {
+            .filter(Boolean)
+            .forEach(
+                input => {
 
                     input.addEventListener(
                         "keydown",
@@ -542,7 +1511,7 @@ const Auth = {
                                 "Enter"
                             ) {
 
-                                this.submit();
+                                this.submitAuth();
 
                             }
 
@@ -550,54 +1519,15 @@ const Auth = {
                     );
 
                 }
-
-            });
-
-
-        this.render();
-
-    },
-
-
-    open() {
-
-        QuizDuo.go("auth");
-
-        this.render();
-
-    },
-
-
-    getUsers() {
-
-        try {
-
-            return JSON.parse(
-                localStorage.getItem(
-                    "quizduo_users"
-                ) || "[]"
             );
 
-        } catch {
 
-            return [];
-
-        }
+        this.renderAuthForm();
 
     },
 
 
-    saveUsers(users) {
-
-        localStorage.setItem(
-            "quizduo_users",
-            JSON.stringify(users)
-        );
-
-    },
-
-
-    render() {
+    renderAuthForm() {
 
         const title =
             document.getElementById(
@@ -617,66 +1547,103 @@ const Auth = {
             );
 
 
-        const confirmBox =
-            document.getElementById(
-                "confirmPasswordBox"
-            );
-
-
-        const confirmInput =
+        const confirm =
             document.getElementById(
                 "authConfirmPassword"
             );
 
 
-        if (
-            !title ||
-            !submit ||
-            !toggle
-        ) {
+        if (!title || !submit || !toggle) {
 
             return;
 
         }
 
 
-        if (this.registerMode) {
+        const registering =
+            this.authMode ===
+            "register";
 
-            title.textContent =
-                "ثبت‌نام";
 
-            submit.textContent =
-                "ثبت‌نام";
+        title.textContent =
+            registering
+                ? "ثبت‌نام"
+                : "ورود";
 
-            toggle.textContent =
-                "قبلاً حساب داری؟ ورود";
 
-            confirmBox.classList.remove(
-                "hidden"
+        submit.textContent =
+            registering
+                ? "ثبت‌نام"
+                : "ورود";
+
+
+        toggle.textContent =
+            registering
+                ? "قبلاً حساب داری؟ ورود"
+                : "حساب نداری؟ ثبت‌نام";
+
+
+        if (confirm) {
+
+            confirm.classList.toggle(
+                "hidden",
+                !registering
             );
-
-            confirmInput.required =
-                true;
-
-        } else {
-
-            title.textContent =
-                "ورود";
-
-            submit.textContent =
-                "ورود";
-
-            toggle.textContent =
-                "حساب نداری؟ ثبت‌نام";
-
-            confirmBox.classList.add(
-                "hidden"
-            );
-
-            confirmInput.required =
-                false;
 
         }
+
+
+        const msg =
+            document.getElementById(
+                "authMsg"
+            );
+
+
+        if (msg) {
+
+            msg.textContent = "";
+
+            msg.className = "";
+
+        }
+
+    },
+
+
+    submitAuth() {
+
+        const username =
+            document.getElementById(
+                "authName"
+            ).value;
+
+
+        const password =
+            document.getElementById(
+                "authPassword"
+            ).value;
+
+
+        const confirmPassword =
+            document.getElementById(
+                "authConfirmPassword"
+            )?.value || "";
+
+
+        const result =
+            this.authMode ===
+            "register"
+
+                ? register(
+                    username,
+                    password,
+                    confirmPassword
+                )
+
+                : login(
+                    username,
+                    password
+                );
 
 
         const message =
@@ -687,1647 +1654,77 @@ const Auth = {
 
         if (message) {
 
-            message.textContent = "";
+            message.textContent =
+                result.message;
 
             message.className =
-                "auth-message";
-
-        }
-
-    },
-
-
-    submit() {
-
-        const name =
-            document
-                .getElementById(
-                    "authName"
-                )
-                .value
-                .trim();
-
-
-        const password =
-            document
-                .getElementById(
-                    "authPassword"
-                )
-                .value;
-
-
-        const confirm =
-            document
-                .getElementById(
-                    "authConfirmPassword"
-                )
-                .value;
-
-
-        const message =
-            document.getElementById(
-                "authMsg"
-            );
-
-
-        if (
-            name.length < 3
-        ) {
-
-            this.showError(
-                "نام کاربری باید حداقل ۳ کاراکتر باشد."
-            );
-
-            return;
+                result.success
+                    ? "auth-success"
+                    : "auth-error";
 
         }
 
 
         if (
-            password.length < 6
+            result.success
         ) {
-
-            this.showError(
-                "رمز عبور باید حداقل ۶ کاراکتر باشد."
-            );
-
-            return;
-
-        }
-
-
-        const users =
-            this.getUsers();
-
-
-        if (this.registerMode) {
-
-            if (
-                password !== confirm
-            ) {
-
-                this.showError(
-                    "رمزهای عبور یکسان نیستند."
-                );
-
-                return;
-
-            }
-
-
-            const exists =
-                users.some(
-                    user =>
-                        user.name.toLowerCase() ===
-                        name.toLowerCase()
-                );
-
-
-            if (exists) {
-
-                this.showError(
-                    "این نام کاربری قبلاً ثبت شده است."
-                );
-
-                return;
-
-            }
-
-
-            users.push({
-
-                name,
-
-                password
-
-            });
-
-
-            this.saveUsers(
-                users
-            );
-
-
-            QuizDuo.state.user =
-                name;
-
-
-            QuizDuo.save();
-
-
-            this.showSuccess(
-                "ثبت‌نام با موفقیت انجام شد."
-            );
-
 
             setTimeout(
                 () => {
 
-                    QuizDuo.go("home");
-
-                    Profile.render();
+                    location.reload();
 
                 },
                 500
             );
 
-
-            return;
-
         }
-
-
-        const user =
-            users.find(
-                item =>
-                    item.name.toLowerCase() ===
-                        name.toLowerCase() &&
-                    item.password ===
-                        password
-            );
-
-
-        if (!user) {
-
-            this.showError(
-                "نام کاربری یا رمز عبور اشتباه است."
-            );
-
-            return;
-
-        }
-
-
-        QuizDuo.state.user =
-            user.name;
-
-
-        QuizDuo.save();
-
-
-        this.showSuccess(
-            "ورود با موفقیت انجام شد."
-        );
-
-
-        setTimeout(
-            () => {
-
-                QuizDuo.go("home");
-
-                Profile.render();
-
-            },
-            500
-        );
 
     },
 
 
-    showError(text) {
+    renderAuthState() {
 
-        const message =
+        const button =
             document.getElementById(
-                "authMsg"
+                "authButton"
             );
 
 
-        message.textContent =
-            text;
-
-        message.className =
-            "auth-message auth-error";
-
-    },
-
-
-    showSuccess(text) {
-
-        const message =
-            document.getElementById(
-                "authMsg"
-            );
-
-
-        message.textContent =
-            text;
-
-        message.className =
-            "auth-message auth-success";
-
-    }
-
-};
-
-
-
-/* =========================
-   PROFILE
-========================= */
-
-const Profile = {
-
-    render() {
-
-        const s =
-            QuizDuo.state;
-
-
-        document.getElementById(
-            "profileName"
-        ).textContent =
-            s.user || "مهمان";
-
-
-        document.getElementById(
-            "profileScore"
-        ).textContent =
-            s.score;
-
-
-        document.getElementById(
-            "profileStreak"
-        ).textContent =
-            s.streak;
-
-
-        document.getElementById(
-            "profileStage"
-        ).textContent =
-            Math.max(
-                s.generalStage,
-                s.funStage
-            );
-
-
-        document.getElementById(
-            "profileHearts"
-        ).textContent =
-            s.hearts;
-
-
-        document.getElementById(
-            "subscription"
-        ).textContent =
-            s.subscription;
-
-    }
-
-};
-
-
-
-/* =========================
-   QUIZ
-========================= */
-
-const Quiz = {
-
-    init() {
-
-        document
-            .querySelectorAll(
-                "[data-category]"
-            )
-            .forEach(button => {
-
-                button.addEventListener(
-                    "click",
-                    () => {
-
-                        document
-                            .querySelectorAll(
-                                "[data-category]"
-                            )
-                            .forEach(
-                                item =>
-                                    item.classList.remove(
-                                        "active"
-                                    )
-                            );
-
-
-                        button.classList.add(
-                            "active"
-                        );
-
-
-                        QuizDuo.category =
-                            button.dataset.category;
-
-
-                        Quiz.renderStages();
-
-                    }
-                );
-
-            });
-
-
-        this.renderStages();
-
-    },
-
-
-    getUnlockedStage() {
-
-        return QuizDuo.state[
-            QuizDuo.category +
-            "Stage"
-        ];
-
-    },
-
-
-    getCompletedStages() {
-
-        return QuizDuo.state[
-            QuizDuo.category === "general"
-                ? "completedGeneralStages"
-                : "completedFunStages"
-        ];
-
-    },
-
-
-    isCompleted(stage) {
-
-        return this
-            .getCompletedStages()
-            .includes(stage);
-
-    },
-
-
-    renderStages() {
-
-        const box =
-            document.getElementById(
-                "stages"
-            );
-
-
-        if (!box) {
-
-            return;
-
-        }
-
-
-        box.innerHTML = "";
-
-
-        const unlocked =
-            this.getUnlockedStage();
-
-
-        for (
-            let i = 1;
-            i <= 5;
-            i++
-        ) {
-
-            const locked =
-                i > unlocked;
-
-
-            const completed =
-                this.isCompleted(i);
-
-
-            const d =
-                document.createElement(
-                    "div"
-                );
-
-
-            d.className =
-                "panel stage" +
-                (
-                    locked
-                        ? " locked"
-                        : ""
-                ) +
-                (
-                    completed
-                        ? " completed"
-                        : ""
-                );
-
-
-            let status;
-
-
-            if (locked) {
-
-                status =
-                    "ابتدا مرحله قبلی را تکمیل کن 🔒";
-
-            } else if (completed) {
-
-                status =
-                    "این مرحله را قبلاً بردی ✓";
-
-            } else {
-
-                status =
-                    "برای شروع کلیک کن";
-
-            }
-
-
-            d.innerHTML = `
-
-                <h3>
-                    مرحله ${i}
-                    ${
-                        locked
-                            ? "🔒"
-                            : completed
-                                ? "✓"
-                                : "🔓"
-                    }
-                </h3>
-
-                <p class="stage-status">
-                    ${status}
-                </p>
-
-            `;
-
-
-            if (!locked) {
-
-                d.addEventListener(
-                    "click",
-                    () => {
-
-                        this.start(i);
-
-                    }
-                );
-
-            }
-
-
-            box.appendChild(d);
-
-        }
-
-
-        const quizBox =
-            document.getElementById(
-                "quizBox"
-            );
-
-
-        quizBox.classList.add(
-            "hidden"
-        );
-
-
-        quizBox.innerHTML = "";
-
-    },
-
-
-    start(stage) {
-
-        const completed =
-            this.isCompleted(
-                stage
-            );
-
-
-        const previous =
-            stage <
-            this.getUnlockedStage();
-
-
-        let replay =
-            completed ||
-            previous;
-
-
-        /*
-         * اگر مرحله قبلاً برده شده،
-         * دلیل صفر بودن XP و صفر بودن قلب
-         * به کاربر گفته می‌شود.
-         */
-        if (replay) {
-
-            const accepted =
-                confirm(
-                    "شما قبلاً امتیاز این مرحله را کسب کرده‌اید.\n\n" +
-                    "آیا مایلید دوباره این مرحله را بازی کنید؟\n\n" +
-                    "بازی کردن در این مرحله نه از شما قلب کم می‌کند " +
-                    "و نه به شما امتیاز اضافه می‌کند."
-                );
-
-
-            if (!accepted) {
-
-                return;
-
-            }
-
-        }
-
-
-        /*
-         * اگر مرحله جدید است و قلب نداریم
-         */
-        if (
-            !replay &&
-            QuizDuo.state.hearts <= 0
-        ) {
-
-            alert(
-                "❤️ قلبی باقی نمانده است.\n\n" +
-                "برای بازی کردن مرحله جدید باید قلب داشته باشی."
-            );
-
-            return;
-
-        }
-
-
-        QuizDuo.currentStage =
-            stage;
-
-
-        QuizDuo.replayMode =
-            replay;
-
-
-        /*
-         * هر مرحله یک مجموعه سؤال دارد.
-         * در این نسخه سؤال‌ها از بانک موجود انتخاب می‌شوند.
-         */
-        this.stageQuestions =
-            this.getQuestionsForStage(
-                stage
-            );
-
-
-        QuizDuo.currentQuestion =
-            0;
-
-
-        QuizDuo.stageCorrect =
-            0;
-
-
-        QuizDuo.stageFinished =
-            false;
-
-
-        this.renderQuestion();
-
-    },
-
-
-    getQuestionsForStage(stage) {
-
-        const all =
-            QUESTIONS[
-                QuizDuo.category
-            ] || [];
-
-
-        /*
-         * در نسخه فعلی بانک سوال،
-         * برای هر مرحله سؤال مشخص نشده.
-         * بنابراین هر مرحله از یک سؤال
-         * متناظر با شماره مرحله استفاده می‌کند.
-         */
-        const index =
-            stage - 1;
-
-
-        if (all[index]) {
-
-            return [all[index]];
-
-        }
-
-
-        /*
-         * اگر برای مرحله سؤال جداگانه وجود نداشت،
-         * از سؤال‌های موجود استفاده می‌کنیم.
-         */
-        if (all.length) {
-
-            return [
-                all[
-                    index %
-                    all.length
-                ]
-            ];
-
-        }
-
-
-        return [];
-
-    },
-
-
-    renderQuestion() {
-
-        const box =
-            document.getElementById(
-                "quizBox"
-            );
+        if (!button) return;
 
 
         if (
-            !this.stageQuestions.length
+            isLoggedIn()
         ) {
 
-            box.innerHTML = `
-
-                <div class="quiz-result quiz-fail">
-
-                    <strong>
-                        سوالی برای این مرحله وجود ندارد.
-                    </strong>
-
-                </div>
-
-            `;
-
-            box.classList.remove(
-                "hidden"
-            );
-
-            return;
-
-        }
-
-
-        const q =
-            this.stageQuestions[
-                QuizDuo.currentQuestion
-            ];
-
-
-        box.classList.remove(
-            "hidden"
-        );
-
-
-        box.innerHTML = `
-
-            <h3>
-                مرحله ${QuizDuo.currentStage}
-            </h3>
-
-            <p>
-                سوال
-                ${QuizDuo.currentQuestion + 1}
-                از
-                ${this.stageQuestions.length}
-            </p>
-
-            <h2 class="quiz-question">
-                ${this.escape(q.q)}
-            </h2>
-
-            <div class="answers">
-
-                ${
-                    q.o
-                        .map(
-                            (option, index) =>
-                                `
-                                    <button
-                                        class="option"
-                                        data-i="${index}"
-                                    >
-                                        ${this.escape(option)}
-                                    </button>
-                                `
-                        )
-                        .join("")
-                }
-
-            </div>
-
-            <div id="questionResult"></div>
-
-        `;
-
-
-        box
-            .querySelectorAll(
-                ".option"
-            )
-            .forEach(button => {
-
-                button.addEventListener(
-                    "click",
-                    () => {
-
-                        this.answer(
-                            Number(
-                                button.dataset.i
-                            )
-                        );
-
-                    }
-                );
-
-            });
-
-
-        box.scrollIntoView({
-            behavior: "smooth",
-            block: "center"
-        });
-
-    },
-
-
-    answer(choice) {
-
-        const q =
-            this.stageQuestions[
-                QuizDuo.currentQuestion
-            ];
-
-
-        if (!q) {
-
-            return;
-
-        }
-
-
-        const box =
-            document.getElementById(
-                "quizBox"
-            );
-
-
-        box
-            .querySelectorAll(
-                ".option"
-            )
-            .forEach(
-                button =>
-                    button.disabled = true
-            );
-
-
-        const correct =
-            choice === q.a;
-
-
-        if (correct) {
-
-            QuizDuo.stageCorrect++;
-
-        }
-
-
-        const result =
-            document.getElementById(
-                "questionResult"
-            );
-
-
-        if (correct) {
-
-            result.innerHTML = `
-
-                <div class="quiz-result quiz-success">
-
-                    <strong>
-                        ✓ درست!
-                    </strong>
-
-                    <span>
-                        نتیجه نهایی بعد از کامل شدن مرحله محاسبه می‌شود.
-                    </span>
-
-                </div>
-
-                <button
-                    class="primary next-button"
-                    id="nextQuestion"
-                >
-                    ${
-                        QuizDuo.currentQuestion + 1 >=
-                        this.stageQuestions.length
-                            ? "مشاهده نتیجه مرحله"
-                            : "سوال بعدی"
-                    }
-                </button>
-
-            `;
+            button.textContent =
+                "خروج از حساب";
 
         } else {
 
-            result.innerHTML = `
-
-                <div class="quiz-result quiz-fail">
-
-                    <strong>
-                        ✕ پاسخ نادرست
-                    </strong>
-
-                    <span>
-                        برای یک پاسخ اشتباه، هنوز قلبی کم نمی‌شود.
-                        قلب فقط اگر کل مرحله را ببازی کم می‌شود.
-                    </span>
-
-                </div>
-
-                <button
-                    class="primary next-button"
-                    id="nextQuestion"
-                >
-                    ${
-                        QuizDuo.currentQuestion + 1 >=
-                        this.stageQuestions.length
-                            ? "مشاهده نتیجه مرحله"
-                            : "سوال بعدی"
-                    }
-                </button>
-
-            `;
+            button.textContent =
+                "ورود / ثبت‌نام";
 
         }
 
 
-        document
-            .getElementById(
-                "nextQuestion"
-            )
-            .addEventListener(
-                "click",
-                () => {
-
-                    this.nextQuestion();
-
-                }
-            );
-
-    },
-
-
-    nextQuestion() {
-
-        QuizDuo.currentQuestion++;
-
-
-        if (
-            QuizDuo.currentQuestion >=
-            this.stageQuestions.length
-        ) {
-
-            this.finishStage();
-
-            return;
-
-        }
-
-
-        this.renderQuestion();
-
-    },
-
-
-    finishStage() {
-
-        const total =
-            this.stageQuestions.length;
-
-
-        const percentage =
-            total
-                ? QuizDuo.stageCorrect /
-                  total
-                : 0;
-
-
-        const passed =
-            percentage >= 0.5;
-
-
-        /*
-         * XP فقط همین‌جا اضافه می‌شود.
-         */
-        let earnedXP = 0;
-
-
-        /*
-         * مرحله‌ای که قبلاً برده شده
-         */
-        if (
-            QuizDuo.replayMode
-        ) {
-
-            earnedXP = 0;
-
-        }
-
-
-        /*
-         * برد مرحله برای اولین بار
-         */
-        else if (passed) {
-
-            this.completeStage();
-
-
-            earnedXP =
-                this.stageQuestions.reduce(
-                    (
-                        totalXP,
-                        question
-                    ) =>
-                        totalXP +
-                        (
-                            question.xp ||
-                            50
-                        ),
-                    0
-                );
-
-
-            QuizDuo.state.score +=
-                earnedXP;
-
-
-            QuizDuo.state.streak++;
-
-
-        }
-
-
-        /*
-         * باخت مرحله برای اولین بار
-         *
-         * فقط یک قلب کم می‌شود.
-         */
-        else if (
-            QuizDuo.state.hearts > 0
-        ) {
-
-            QuizDuo.state.hearts--;
-
-        }
-
-
-        QuizDuo.save();
-
-        Profile.render();
-
-
-        const box =
+        const userLabel =
             document.getElementById(
-                "quizBox"
+                "currentUserLabel"
             );
 
 
-        let title;
+        if (userLabel) {
 
-        let message;
-
-        let className;
-
-
-        if (
-            QuizDuo.replayMode
-        ) {
-
-            title =
-                "🔄 بازی مجدد مرحله";
-
-            message =
-                "این مرحله را قبلاً برده بودی." +
-                "<br><br>" +
-                "این بار <strong>XP اضافه نشد</strong> و <strong>قلبی هم کم نشد</strong>.";
-
-            className =
-                "quiz-replay";
-
-        } else if (passed) {
-
-            title =
-                "🎉 مرحله را بردی!";
-
-            message =
-                `+${earnedXP} XP به امتیازت اضافه شد.` +
-                "<br><br>" +
-                "مرحله بعد برایت باز شد.";
-
-            className =
-                "quiz-success";
-
-        } else {
-
-            title =
-                "📚 مرحله را نبردی";
-
-            message =
-                "برای این مرحله XP نگرفتی." +
-                "<br><br>" +
-                "❤️ فقط یک قلب بابت شکست کل مرحله کم شد." +
-                "<br><br>" +
-                "می‌توانی دوباره تلاش کنی.";
-
-            className =
-                "quiz-fail";
+            userLabel.textContent =
+                state.username;
 
         }
-
-
-        box.innerHTML = `
-
-            <div class="stage-result">
-
-                <div class="stage-result-icon">
-                    ${
-                        passed
-                            ? "🎉"
-                            : QuizDuo.replayMode
-                                ? "🔄"
-                                : "📚"
-                    }
-                </div>
-
-                <h2>
-                    ${title}
-                </h2>
-
-                <div class="stage-result-score">
-                    ${Math.round(
-                        percentage * 100
-                    )}%
-                </div>
-
-                <p>
-                    ${QuizDuo.stageCorrect}
-                    پاسخ درست از
-                    ${total}
-                    سؤال
-                </p>
-
-                <div
-                    class="quiz-result ${className}"
-                >
-                    ${message}
-                </div>
-
-                <button
-                    class="primary next-button"
-                    id="backToStages"
-                >
-                    بازگشت به مراحل
-                </button>
-
-            </div>
-
-        `;
-
-
-        document
-            .getElementById(
-                "backToStages"
-            )
-            .addEventListener(
-                "click",
-                () => {
-
-                    this.renderStages();
-
-                }
-            );
-
-    },
-
-
-    completeStage() {
-
-        const key =
-            QuizDuo.category === "general"
-                ? "completedGeneralStages"
-                : "completedFunStages";
-
-
-        const stage =
-            QuizDuo.currentStage;
-
-
-        if (
-            !QuizDuo.state[key].includes(
-                stage
-            )
-        ) {
-
-            QuizDuo.state[key].push(
-                stage
-            );
-
-        }
-
-
-        const stageKey =
-            QuizDuo.category +
-            "Stage";
-
-
-        /*
-         * فقط اگر این مرحله همان مرحله فعلی
-         * بوده باشد، مرحله بعد باز می‌شود.
-         */
-        if (
-            QuizDuo.state[stageKey] ===
-            stage
-        ) {
-
-            QuizDuo.state[stageKey] =
-                stage + 1;
-
-        }
-
-    },
-
-
-    escape(value) {
-
-        return String(value)
-
-            .replaceAll(
-                "&",
-                "&amp;"
-            )
-
-            .replaceAll(
-                "<",
-                "&lt;"
-            )
-
-            .replaceAll(
-                ">",
-                "&gt;"
-            )
-
-            .replaceAll(
-                '"',
-                "&quot;"
-            )
-
-            .replaceAll(
-                "'",
-                "&#039;"
-            );
 
     }
 
 };
 
 
-
-/* =========================
-   LEADERBOARD
-========================= */
-
-const Leaderboard = {
-
-    init() {},
-
-
-    render() {
-
-        const body =
-            document.getElementById(
-                "leaderBody"
-            );
-
-
-        if (!body) {
-
-            return;
-
-        }
-
-
-        let local;
-
-
-        try {
-
-            local =
-                JSON.parse(
-                    localStorage.getItem(
-                        "quizduo_local_leaderboard"
-                    ) || "[]"
-                );
-
-        } catch {
-
-            local = [];
-
-        }
-
-
-        const s =
-            QuizDuo.state;
-
-
-        let arr =
-            [...local];
-
-
-        if (s.user) {
-
-            arr =
-                arr.filter(
-                    item =>
-                        item.name !==
-                        s.user
-                );
-
-
-            arr.push({
-
-                name:
-                    s.user,
-
-                score:
-                    s.score,
-
-                stage:
-                    Math.max(
-                        s.generalStage,
-                        s.funStage
-                    )
-
-            });
-
-        }
-
-
-        arr.sort(
-            (a, b) =>
-                b.score -
-                a.score
-        );
-
-
-        if (!arr.length) {
-
-            arr = [
-
-                {
-
-                    name:
-                        "هنوز داده‌ای وجود ندارد",
-
-                    score:
-                        0,
-
-                    stage:
-                        1
-
-                }
-
-            ];
-
-        }
-
-
-        body.innerHTML =
-            arr
-                .map(
-                    (item, index) =>
-                        `
-
-                            <tr>
-
-                                <td>
-                                    ${index + 1}
-                                </td>
-
-                                <td>
-                                    ${Quiz.escape(
-                                        item.name
-                                    )}
-                                </td>
-
-                                <td>
-                                    ${item.score}
-                                </td>
-
-                                <td>
-                                    ${item.stage}
-                                </td>
-
-                            </tr>
-
-                        `
-                )
-                .join("");
-
-    }
-
-};
-
-
-
-/* =========================
-   CHAT
-========================= */
-
-const Chat = {
-
-    init() {
-
-        this.load();
-
-
-        const send =
-            document.getElementById(
-                "sendChat"
-            );
-
-
-        if (send) {
-
-            send.addEventListener(
-                "click",
-                () => {
-
-                    const input =
-                        document.getElementById(
-                            "chatInput"
-                        );
-
-
-                    const text =
-                        input.value.trim();
-
-
-                    if (!text) {
-
-                        return;
-
-                    }
-
-
-                    let messages;
-
-
-                    try {
-
-                        messages =
-                            JSON.parse(
-                                localStorage.getItem(
-                                    "quizduo_chat"
-                                ) || "[]"
-                            );
-
-                    } catch {
-
-                        messages = [];
-
-                    }
-
-
-                    messages.push({
-
-                        u:
-                            QuizDuo.state.user ||
-                            "مهمان",
-
-                        t:
-                            text
-
-                    });
-
-
-                    localStorage.setItem(
-                        "quizduo_chat",
-                        JSON.stringify(
-                            messages
-                        )
-                    );
-
-
-                    input.value = "";
-
-
-                    this.load();
-
-                }
-            );
-
-        }
-
-    },
-
-
-    load() {
-
-        const box =
-            document.getElementById(
-                "messages"
-            );
-
-
-        if (!box) {
-
-            return;
-
-        }
-
-
-        let messages;
-
-
-        try {
-
-            messages =
-                JSON.parse(
-                    localStorage.getItem(
-                        "quizduo_chat"
-                    ) || "[]"
-                );
-
-        } catch {
-
-            messages = [];
-
-        }
-
-
-        box.innerHTML =
-            messages
-                .map(
-                    message =>
-                        `
-
-                            <div class="message">
-
-                                <b>
-                                    ${Quiz.escape(
-                                        message.u
-                                    )}
-                                </b>
-
-                                <br>
-
-                                ${Quiz.escape(
-                                    message.t
-                                )}
-
-                            </div>
-
-                        `
-                )
-                .join("");
-
-    }
-
-};
-
-
-
-/* =========================
-   SUPPORT
-========================= */
-
-const Support = {
-
-    init() {
-
-        const send =
-            document.getElementById(
-                "supportSend"
-            );
-
-
-        if (!send) {
-
-            return;
-
-        }
-
-
-        send.addEventListener(
-            "click",
-            () => {
-
-                const subject =
-                    document
-                        .getElementById(
-                            "supportSubject"
-                        )
-                        .value
-                        .trim();
-
-
-                const text =
-                    document
-                        .getElementById(
-                            "supportText"
-                        )
-                        .value
-                        .trim();
-
-
-                const message =
-                    document.getElementById(
-                        "supportMsg"
-                    );
-
-
-                if (
-                    !subject ||
-                    !text
-                ) {
-
-                    message.textContent =
-                        "موضوع و پیام را وارد کنید.";
-
-                    return;
-
-                }
-
-
-                let requests;
-
-
-                try {
-
-                    requests =
-                        JSON.parse(
-                            localStorage.getItem(
-                                "quizduo_support"
-                            ) || "[]"
-                        );
-
-                } catch {
-
-                    requests = [];
-
-                }
-
-
-                requests.push({
-
-                    u:
-                        QuizDuo.state.user ||
-                        "مهمان",
-
-                    s:
-                        subject,
-
-                    t:
-                        text,
-
-                    date:
-                        new Date().toISOString()
-
-                });
-
-
-                localStorage.setItem(
-                    "quizduo_support",
-                    JSON.stringify(
-                        requests
-                    )
-                );
-
-
-                message.textContent =
-                    "درخواست در این نسخه روی دستگاه ذخیره شد.";
-
-
-                document
-                    .getElementById(
-                        "supportSubject"
-                    )
-                    .value = "";
-
-
-                document
-                    .getElementById(
-                        "supportText"
-                    )
-                    .value = "";
-
-            }
-        );
-
-    }
-
-};
-
-
-
-QuizDuo.init();
+app.init();
