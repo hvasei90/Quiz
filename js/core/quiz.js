@@ -5,15 +5,50 @@ import {
 
 export const QUIZ_CONFIG = {
 
+    /*
+     * تعداد سؤال‌هایی که در هر اجرای
+     * یک مرحله به صورت تصادفی انتخاب می‌شوند.
+     */
+
     questionsPerStage: 2,
+
+
+    /*
+     * حداقل درصد لازم برای قبولی.
+     *
+     * 0.50 = پنجاه درصد
+     * 0.60 = شصت درصد
+     * 0.80 = هشتاد درصد
+     * 1.00 = صد درصد
+     */
 
     passingPercentage: 0.50,
 
+
+    /*
+     * زمان هر سؤال بر حسب ثانیه
+     */
+
     questionTime: 15,
+
+
+    /*
+     * XP پایه
+     */
 
     baseXP: 10,
 
+
+    /*
+     * XP اضافه برای Combo
+     */
+
     comboBonus: 5,
+
+
+    /*
+     * تعداد Heart کم‌شده برای پاسخ غلط
+     */
 
     wrongAnswerPenalty: 1
 
@@ -22,12 +57,15 @@ export const QUIZ_CONFIG = {
 
 export class QuizEngine {
 
+
     constructor(
         state,
         saveState
     ) {
 
-        this.state = state;
+        this.state =
+            state;
+
 
         this.saveState =
             saveState;
@@ -55,7 +93,10 @@ export class QuizEngine {
     }
 
 
-    async loadCategory(category) {
+
+    async loadCategory(
+        category
+    ) {
 
         const response =
             await fetch(
@@ -79,20 +120,28 @@ export class QuizEngine {
         this.questions =
             data.questions || [];
 
+
         this.currentCategory =
             category;
 
     }
 
 
-    getStageQuestions(stage) {
+
+    getStageQuestions(
+        stage
+    ) {
 
         return this.questions.filter(
             question =>
-                question.stage === stage
+                Number(
+                    question.stage
+                ) ===
+                Number(stage)
         );
 
     }
+
 
 
     startStage(
@@ -103,19 +152,29 @@ export class QuizEngine {
         this.currentCategory =
             category;
 
+
         this.currentStage =
             stage;
 
 
-        this.currentQuestion = 0;
+        this.currentQuestion =
+            0;
 
-        this.correctAnswers = 0;
 
-        this.wrongAnswers = 0;
+        this.correctAnswers =
+            0;
 
-        this.combo = 0;
 
-        this.finished = false;
+        this.wrongAnswers =
+            0;
+
+
+        this.combo =
+            0;
+
+
+        this.finished =
+            false;
 
 
         const stageQuestions =
@@ -125,8 +184,10 @@ export class QuizEngine {
 
 
         /*
-         * سؤال‌ها ابتدا shuffle می‌شوند
-         * و بعد فقط تعداد مشخصی انتخاب می‌شود.
+         * ابتدا کل سؤال‌های این مرحله
+         * Shuffle می‌شوند.
+         *
+         * سپس فقط N سؤال انتخاب می‌شود.
          */
 
         this.selectedQuestions =
@@ -146,6 +207,7 @@ export class QuizEngine {
     }
 
 
+
     getCurrentQuestion() {
 
         return this.selectedQuestions[
@@ -155,6 +217,7 @@ export class QuizEngine {
     }
 
 
+
     getQuestionCount() {
 
         return this.selectedQuestions.length;
@@ -162,11 +225,14 @@ export class QuizEngine {
     }
 
 
+
     getProgress() {
 
-        if (
-            this.getQuestionCount() === 0
-        ) {
+        const total =
+            this.getQuestionCount();
+
+
+        if (!total) {
 
             return 0;
 
@@ -175,13 +241,16 @@ export class QuizEngine {
 
         return (
             this.currentQuestion /
-            this.getQuestionCount()
+            total
         );
 
     }
 
 
-    answer(answerIndex) {
+
+    answer(
+        answerIndex
+    ) {
 
         const question =
             this.getCurrentQuestion();
@@ -190,24 +259,35 @@ export class QuizEngine {
         if (!question) {
 
             return {
+
                 finished: true,
-                correct: false
+
+                correct: false,
+
+                passed: false
+
             };
 
         }
 
 
         const correct =
+            answerIndex !== null &&
             answerIndex ===
-            question.answer;
+            Number(
+                question.answer
+            );
 
 
         let earnedXP = 0;
 
 
+
         if (correct) {
 
+
             this.correctAnswers++;
+
 
             this.combo++;
 
@@ -224,8 +304,10 @@ export class QuizEngine {
 
 
             earnedXP =
-                (question.xp ||
-                    QUIZ_CONFIG.baseXP) +
+                (
+                    question.xp ||
+                    QUIZ_CONFIG.baseXP
+                ) +
                 Math.max(
                     0,
                     this.combo - 1
@@ -239,7 +321,9 @@ export class QuizEngine {
 
         } else {
 
+
             this.wrongAnswers++;
+
 
             this.combo = 0;
 
@@ -248,15 +332,21 @@ export class QuizEngine {
                 this.state.hearts > 0
             ) {
 
-                this.state.hearts -=
-                    QUIZ_CONFIG.wrongAnswerPenalty;
+                this.state.hearts =
+                    Math.max(
+                        0,
+                        this.state.hearts -
+                        QUIZ_CONFIG.wrongAnswerPenalty
+                    );
 
             }
 
         }
 
 
+
         this.currentQuestion++;
+
 
 
         const finished =
@@ -264,27 +354,45 @@ export class QuizEngine {
             this.selectedQuestions.length;
 
 
+
         let passed = false;
+
 
 
         if (finished) {
 
-            const percentage =
-                this.correctAnswers /
+
+            const total =
                 this.selectedQuestions.length;
 
+
+            const percentage =
+                total > 0
+                    ? this.correctAnswers /
+                      total
+                    : 0;
+
+
+            /*
+             * قبولی کل مرحله
+             * بر اساس تمام پاسخ‌های مرحله است،
+             * نه پاسخ سؤال آخر.
+             */
 
             passed =
                 percentage >=
                 QUIZ_CONFIG.passingPercentage;
 
 
+
             if (passed) {
+
 
                 if (
                     this.currentCategory ===
                     "general"
                 ) {
+
 
                     if (
                         this.state.generalStage ===
@@ -295,7 +403,9 @@ export class QuizEngine {
 
                     }
 
+
                 } else {
+
 
                     if (
                         this.state.funStage ===
@@ -313,7 +423,9 @@ export class QuizEngine {
         }
 
 
+
         this.saveState();
+
 
 
         return {
@@ -344,7 +456,15 @@ export class QuizEngine {
                     : 0,
 
             explanation:
-                question.explanation || ""
+                question.explanation ||
+                "",
+
+            correctAnswer:
+                question.options[
+                    Number(
+                        question.answer
+                    )
+                ]
 
         };
 
