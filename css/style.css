@@ -8,25 +8,15 @@
 :root {
 
     --bg: #0b1017;
-
     --card: #141b24;
-
     --card-light: #1c2531;
-
     --text: #f5f7fa;
-
     --muted: #98a5b4;
-
     --primary: #35d0ba;
-
     --primary-dark: #20a895;
-
     --border: #283443;
-
     --success: #45d596;
-
     --danger: #ff6575;
-
     --warning: #f3ba4c;
 
 }
@@ -35,25 +25,15 @@
 :root[data-theme="light"] {
 
     --bg: #f4f7fa;
-
     --card: #ffffff;
-
     --card-light: #edf2f6;
-
     --text: #17202b;
-
     --muted: #687585;
-
     --primary: #18a991;
-
     --primary-dark: #108c78;
-
     --border: #d9e0e7;
-
     --success: #169b68;
-
     --danger: #e34f60;
-
     --warning: #c88916;
 
 }
@@ -82,29 +62,6 @@ body {
     transition:
         background 0.25s,
         color 0.25s;
-
-}
-
-
-/*
-    Text direction helpers
-*/
-
-[lang="en"],
-.ltr {
-
-    direction: ltr;
-
-    text-align: left;
-
-}
-
-
-.logo {
-
-    direction: ltr;
-
-    unicode-bidi: isolate;
 
 }
 
@@ -157,7 +114,14 @@ button {
 }
 
 
+/*
+    سمت چپ:
+    QuizDuo + Theme
+*/
+
 .topbar-left {
+
+    order: 1;
 
     display: flex;
 
@@ -168,7 +132,31 @@ button {
 }
 
 
+/*
+    سمت راست:
+    Navigation
+*/
+
+.topbar nav {
+
+    order: 2;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: flex-end;
+
+    gap: 5px;
+
+}
+
+
 .logo {
+
+    direction: ltr;
+
+    unicode-bidi: isolate;
 
     font-size: 26px;
 
@@ -191,21 +179,6 @@ button {
 .logo span:last-child {
 
     color: var(--primary);
-
-}
-
-
-nav {
-
-    display: flex;
-
-    align-items: center;
-
-    justify-content: flex-end;
-
-    gap: 5px;
-
-    direction: rtl;
 
 }
 
@@ -251,6 +224,21 @@ nav button:hover {
     height: 40px;
 
     border-radius: 11px;
+
+}
+
+
+.logout-nav-button {
+
+    color:
+        var(--danger) !important;
+
+}
+
+
+.hidden {
+
+    display: none !important;
 
 }
 
@@ -505,7 +493,7 @@ main {
 
 
 /* =========================
-   HOME CARDS
+   HOME
 ========================= */
 
 .category-grid {
@@ -762,6 +750,21 @@ main {
 }
 
 
+.stage-card.completed {
+
+    border-color:
+        var(--success);
+
+    background:
+        linear-gradient(
+            145deg,
+            var(--card),
+            rgba(69, 213, 150, 0.06)
+        );
+
+}
+
+
 .stage-number {
 
     display: grid;
@@ -779,6 +782,15 @@ main {
     color: var(--primary);
 
     font-weight: 900;
+
+}
+
+
+.stage-card.completed
+.stage-number {
+
+    color:
+        var(--success);
 
 }
 
@@ -843,13 +855,6 @@ main {
 }
 
 
-.quiz-top span:first-child {
-
-    direction: rtl;
-
-}
-
-
 .question-counter {
 
     direction: ltr;
@@ -887,10 +892,6 @@ main {
 
 }
 
-
-/* =========================
-   TIMER
-========================= */
 
 .timer-row {
 
@@ -953,10 +954,6 @@ main {
 }
 
 
-/* =========================
-   COMBO
-========================= */
-
 .combo-display {
 
     display: inline-block;
@@ -987,10 +984,6 @@ main {
 
 }
 
-
-/* =========================
-   QUESTION
-========================= */
 
 .quiz-box h3 {
 
@@ -1089,22 +1082,6 @@ main {
 }
 
 
-.result-success strong {
-
-    display: block;
-
-}
-
-
-.result-success span {
-
-    display: block;
-
-    margin-top: 5px;
-
-}
-
-
 .result-error {
 
     padding: 15px;
@@ -1120,6 +1097,7 @@ main {
 }
 
 
+.result-success strong,
 .result-error strong {
 
     display: block;
@@ -1127,6 +1105,7 @@ main {
 }
 
 
+.result-success span,
 .result-error span {
 
     display: block;
@@ -1231,22 +1210,6 @@ main {
 }
 
 
-.result-breakdown div:first-child strong {
-
-    color:
-        var(--success);
-
-}
-
-
-.result-breakdown div:last-child strong {
-
-    color:
-        var(--danger);
-
-}
-
-
 .result-message {
 
     margin-top: 15px;
@@ -1321,10 +1284,6 @@ main {
 
     color:
         var(--muted);
-
-    direction: ltr;
-
-    text-align: right;
 
 }
 
@@ -1446,6 +1405,202 @@ main {
     opacity: 0.45;
 
     cursor: not-allowed;
+
+}
+
+
+/* =========================
+   AUTH
+========================= */
+
+.auth-wrapper {
+
+    width:
+        min(480px, 100%);
+
+    margin:
+        0 auto;
+
+}
+
+
+.auth-card {
+
+    padding:
+        35px;
+
+    background:
+        var(--card);
+
+    border:
+        1px solid var(--border);
+
+    border-radius: 22px;
+
+}
+
+
+.auth-header h2 {
+
+    font-size: 30px;
+
+    margin-bottom: 10px;
+
+}
+
+
+.auth-header p:last-child {
+
+    color:
+        var(--muted);
+
+    line-height: 1.9;
+
+}
+
+
+.auth-tabs {
+
+    display: grid;
+
+    grid-template-columns:
+        1fr 1fr;
+
+    gap: 8px;
+
+    padding: 5px;
+
+    margin-top: 25px;
+
+    background:
+        var(--card-light);
+
+    border-radius: 12px;
+
+}
+
+
+.auth-tab {
+
+    border: 0;
+
+    padding:
+        11px;
+
+    background:
+        transparent;
+
+    color:
+        var(--muted);
+
+    border-radius: 9px;
+
+    font-weight: 800;
+
+}
+
+
+.auth-tab.active {
+
+    background:
+        var(--primary);
+
+    color:
+        #071411;
+
+}
+
+
+.auth-form {
+
+    display: flex;
+
+    flex-direction: column;
+
+    margin-top: 25px;
+
+}
+
+
+.auth-form label {
+
+    margin:
+        13px 0 7px;
+
+    font-size: 14px;
+
+    font-weight: 700;
+
+}
+
+
+.auth-form input {
+
+    width: 100%;
+
+    padding:
+        13px 14px;
+
+    border:
+        1px solid var(--border);
+
+    border-radius: 11px;
+
+    background:
+        var(--card-light);
+
+    color:
+        var(--text);
+
+    outline: none;
+
+    direction: ltr;
+
+    text-align: left;
+
+}
+
+
+.auth-form input:focus {
+
+    border-color:
+        var(--primary);
+
+}
+
+
+.auth-form .primary-btn {
+
+    width: 100%;
+
+}
+
+
+.auth-message {
+
+    min-height: 25px;
+
+    margin-top: 15px;
+
+    line-height: 1.8;
+
+    text-align: center;
+
+}
+
+
+.auth-message.success {
+
+    color:
+        var(--success);
+
+}
+
+
+.auth-message.error {
+
+    color:
+        var(--danger);
 
 }
 
@@ -1610,14 +1765,6 @@ th {
 }
 
 
-.chat-input input:focus {
-
-    border-color:
-        var(--primary);
-
-}
-
-
 .chat-input button {
 
     border: 0;
@@ -1634,87 +1781,6 @@ th {
         #071411;
 
     font-weight: 800;
-
-}
-
-
-/* =========================
-   EMERGENCY
-========================= */
-
-.emergency-badge {
-
-    padding:
-        8px 12px;
-
-    border-radius: 10px;
-
-    background:
-        rgba(243, 186, 76, 0.12);
-
-    color:
-        var(--warning);
-
-    font-size: 12px;
-
-    direction: ltr;
-
-}
-
-
-.offline-features {
-
-    display: grid;
-
-    grid-template-columns:
-        repeat(3, 1fr);
-
-    gap: 15px;
-
-    margin-top: 25px;
-
-}
-
-
-.emergency-note {
-
-    margin:
-        25px 0;
-
-    padding: 25px;
-
-    background:
-        var(--card);
-
-    border:
-        1px solid var(--border);
-
-    border-radius: 18px;
-
-}
-
-
-.emergency-note h3 {
-
-    margin-bottom: 15px;
-
-}
-
-
-.emergency-note li {
-
-    color:
-        var(--muted);
-
-    margin:
-        10px 25px;
-
-}
-
-
-.emergency-actions {
-
-    margin-top: 20px;
 
 }
 
@@ -1770,6 +1836,8 @@ footer a {
 
     .topbar-left {
 
+        order: 1;
+
         width: 100%;
 
         justify-content:
@@ -1778,7 +1846,9 @@ footer a {
     }
 
 
-    nav {
+    .topbar nav {
+
+        order: 2;
 
         width: 100%;
 
@@ -1821,7 +1891,6 @@ footer a {
 
     }
 
-
 }
 
 
@@ -1849,14 +1918,6 @@ footer a {
 
         grid-template-columns:
             repeat(2, 1fr);
-
-    }
-
-
-    .offline-features {
-
-        grid-template-columns:
-            1fr;
 
     }
 
@@ -1894,6 +1955,14 @@ footer a {
     .daily-reward {
 
         width: 100%;
+
+    }
+
+
+    .auth-card {
+
+        padding:
+            25px 20px;
 
     }
 
@@ -1935,6 +2004,5 @@ footer a {
             1fr;
 
     }
-
 
 }
