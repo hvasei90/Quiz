@@ -1,4 +1,5 @@
-const STORAGE_KEY = "quizduo_state";
+const STORAGE_KEY =
+    "quizduo_state";
 
 
 export function loadState(defaultState) {
@@ -6,25 +7,41 @@ export function loadState(defaultState) {
     try {
 
         const saved =
-            localStorage.getItem(STORAGE_KEY);
+            localStorage.getItem(
+                STORAGE_KEY
+            );
+
 
         if (!saved) {
-            return structuredClone(defaultState);
+
+            return structuredClone(
+                defaultState
+            );
+
         }
 
+
         return {
-            ...structuredClone(defaultState),
+
+            ...structuredClone(
+                defaultState
+            ),
+
             ...JSON.parse(saved)
+
         };
 
     } catch (error) {
 
         console.error(
-            "Failed to load QuizDuo state:",
+            "QuizDuo state error:",
             error
         );
 
-        return structuredClone(defaultState);
+
+        return structuredClone(
+            defaultState
+        );
 
     }
 
@@ -45,7 +62,7 @@ export function saveState(state) {
     } catch (error) {
 
         console.error(
-            "Failed to save QuizDuo state:",
+            "Could not save state:",
             error
         );
 
@@ -58,36 +75,8 @@ export function saveState(state) {
 
 export function clearState() {
 
-    localStorage.removeItem(STORAGE_KEY);
-
-}
-
-
-export function loadCollection(key) {
-
-    try {
-
-        const data =
-            localStorage.getItem(key);
-
-        return data
-            ? JSON.parse(data)
-            : [];
-
-    } catch {
-
-        return [];
-
-    }
-
-}
-
-
-export function saveCollection(key, data) {
-
-    localStorage.setItem(
-        key,
-        JSON.stringify(data)
+    localStorage.removeItem(
+        STORAGE_KEY
     );
 
 }
