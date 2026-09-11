@@ -1,37 +1,44 @@
 export const DEFAULT_STATE = {
-    username: "بازیکن مهمان",
 
-    xp: 0,
+    username:
+        "بازیکن مهمان",
 
-    level: 1,
+    xp:
+        0,
 
-    streak: 0,
+    level:
+        1,
 
-    lastActiveDate: null,
+    streak:
+        0,
 
-    lastRewardDate: null,
+    lastActiveDate:
+        null,
 
-    generalStage: 1,
+    generalStage:
+        1,
 
-    funStage: 1,
+    funStage:
+        1,
 
-    completedGeneralStages: [],
+    completedGeneralStages:
+        [],
 
-    completedFunStages: [],
+    completedFunStages:
+        [],
 
-    currentCategory: "general",
+    hearts:
+        5,
 
-    subscription: "free",
+    maxHearts:
+        5,
 
-    hearts: 5,
+    theme:
+        "light",
 
-    maxHearts: 5,
+    subscription:
+        "free"
 
-    combo: 0,
-
-    bestCombo: 0,
-
-    theme: "dark"
 };
 
 
@@ -44,16 +51,30 @@ export function createDefaultState() {
 }
 
 
-export function calculateLevel(xp) {
+export function calculateLevel(
+    xp
+) {
 
-    return Math.floor(xp / 100) + 1;
+    return (
+        Math.floor(
+            Number(xp || 0) /
+            100
+        ) + 1
+    );
 
 }
 
 
-export function addXP(state, amount) {
+export function addXP(
+    state,
+    amount
+) {
 
-    state.xp += amount;
+    state.xp +=
+        Number(
+            amount || 0
+        );
+
 
     state.level =
         calculateLevel(
@@ -63,36 +84,16 @@ export function addXP(state, amount) {
 }
 
 
-export function getCurrentStage(
+export function getUnlockedStage(
     state,
     category
 ) {
 
-    if (category === "general") {
+    return category === "general"
 
-        return state.generalStage;
+        ? state.generalStage
 
-    }
-
-    return state.funStage;
-
-}
-
-
-export function unlockNextStage(
-    state,
-    category
-) {
-
-    if (category === "general") {
-
-        state.generalStage += 1;
-
-    } else {
-
-        state.funStage += 1;
-
-    }
+        : state.funStage;
 
 }
 
@@ -140,13 +141,40 @@ export function markStageCompleted(
     }
 
 
-    if (!state[key].includes(stage)) {
+    if (
+        !state[key].includes(stage)
+    ) {
 
         state[key].push(stage);
 
         state[key].sort(
             (a, b) => a - b
         );
+
+    }
+
+
+    const nextStage =
+        stage + 1;
+
+
+    if (
+        category === "general"
+    ) {
+
+        state.generalStage =
+            Math.max(
+                state.generalStage,
+                nextStage
+            );
+
+    } else {
+
+        state.funStage =
+            Math.max(
+                state.funStage,
+                nextStage
+            );
 
     }
 
