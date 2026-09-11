@@ -1,25 +1,29 @@
 const STATE_PREFIX =
     "quizduo_state_";
 
-const GUEST_KEY =
-    "quizduo_state_guest";
+
+const USERS_KEY =
+    "quizduo_users";
 
 
-function keyFor(username) {
+const CURRENT_USER_KEY =
+    "quizduo_current_user";
 
-    if (
-        !username ||
-        username === "بازیکن مهمان"
-    ) {
 
-        return GUEST_KEY;
+const LEADERBOARD_KEY =
+    "quizduo_leaderboard";
 
-    }
 
+function userKey(username) {
 
     return (
         STATE_PREFIX +
-        encodeURIComponent(username)
+        encodeURIComponent(
+            String(
+                username ||
+                "guest"
+            ).toLowerCase()
+        )
     );
 
 }
@@ -27,14 +31,14 @@ function keyFor(username) {
 
 export function loadState(
     defaultState,
-    username = "بازیکن مهمان"
+    username = "guest"
 ) {
 
     try {
 
         const saved =
             localStorage.getItem(
-                keyFor(username)
+                userKey(username)
             );
 
 
@@ -47,13 +51,31 @@ export function loadState(
         }
 
 
+        const parsed =
+            JSON.parse(saved);
+
+
         return {
 
             ...structuredClone(
                 defaultState
             ),
 
-            ...JSON.parse(saved)
+            ...parsed,
+
+            completedGeneralStages:
+                Array.isArray(
+                    parsed.completedGeneralStages
+                )
+                    ? parsed.completedGeneralStages
+                    : [],
+
+            completedFunStages:
+                Array.isArray(
+                    parsed.completedFunStages
+                )
+                    ? parsed.completedFunStages
+                    : []
 
         };
 
@@ -76,19 +98,17 @@ export function loadState(
 
 export function saveState(
     state,
-    username = state.username
+    username =
+        state.username ||
+        "guest"
 ) {
 
     try {
 
         localStorage.setItem(
-
-            keyFor(username),
-
+            userKey(username),
             JSON.stringify(state)
-
         );
-
 
         return true;
 
@@ -99,7 +119,6 @@ export function saveState(
             error
         );
 
-
         return false;
 
     }
@@ -107,12 +126,163 @@ export function saveState(
 }
 
 
-export function clearState(
-    username = "بازیکن مهمان"
+export function getCurrentUser() {
+
+    return localStorage.getItem(
+        CURRENT_USER_KEY
+    ) || null;
+
+}
+
+
+export function setCurrentUser(
+    username
 ) {
 
+    localStorage.setItem(
+        CURRENT_USER_KEY,
+        username
+    );
+
+}
+
+
+export function logoutUser() {
+
     localStorage.removeItem(
-        keyFor(username)
+        CURRENT_USER_KEY
+    );
+
+}
+
+
+export function getUsers() {
+
+    try {
+
+        const users =
+            JSON.parse(
+                localStorage.getItem(
+                    USERS_KEY
+                ) || "[]"
+            );
+
+
+        return Array.isArray(users)
+            ? users
+            : [];
+
+    } catch {
+
+        return [];
+
+    }
+
+}
+
+
+export function saveUsers(
+    users
+) {
+
+    localStorage.setItem(
+        USERS_KEY,
+        JSON.stringify(users)
+    );
+
+}
+
+
+export function getLeaderboard() {
+
+    try {
+
+        const board =
+            JSON.parse(
+                localStorage.getItem(
+                    LEADERBOARD_KEY
+                ) || "[]"
+            );
+
+
+        return Array.isArray(board)
+            ? board
+            : [];
+
+    } catch {
+
+        return [];
+
+    }
+
+}
+
+
+export function updateLeaderboard(
+    state
+) {
+
+    if (
+        !state.username ||
+        state.username ===
+        "بازیکن مهمان"
+    ) {
+
+        return;
+
+    }
+
+
+    const board =
+        getLeaderboard().filter(
+            item =>
+                item.username.toLowerCase() !==
+                state.username.toLowerCase()
+        );
+
+
+    board.push({
+
+        username:
+            state.username,
+
+        xp:
+            state.xp,
+
+        level:
+            state.level,
+
+        generalStage:
+            Math.max(
+                0,
+                state.generalStage - 1
+            ),
+
+        funStage:
+            Math.max(
+                0,
+                state.funStage - 1
+            ),
+
+        updatedAt:
+            Date.now()
+
+    });
+
+
+    board.sort(
+        (a, b) =>
+            b.xp - a.xp ||
+            b.level - a.level ||
+            b.updatedAt - a.updatedAt
+    );
+
+
+    localStorage.setItem(
+        LEADERBOARD_KEY,
+        JSON.stringify(
+            board.slice(0, 100)
+        )
     );
 
 }
