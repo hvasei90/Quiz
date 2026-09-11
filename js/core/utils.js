@@ -10,40 +10,19 @@ export function todayKey() {
 
         String(
             date.getMonth() + 1
-        ).padStart(2, "0"),
+        ).padStart(
+            2,
+            "0"
+        ),
 
         String(
             date.getDate()
-        ).padStart(2, "0")
+        ).padStart(
+            2,
+            "0"
+        )
 
     ].join("-");
-
-}
-
-
-export function daysBetween(
-    dateA,
-    dateB
-) {
-
-    const a =
-        new Date(dateA);
-
-
-    const b =
-        new Date(dateB);
-
-
-    const difference =
-        Math.abs(
-            b - a
-        );
-
-
-    return Math.floor(
-        difference /
-        (1000 * 60 * 60 * 24)
-    );
 
 }
 
@@ -57,20 +36,6 @@ export function updateStreak(
 
 
     if (
-        !state.lastActiveDate
-    ) {
-
-        state.streak = 1;
-
-        state.lastActiveDate =
-            today;
-
-        return;
-
-    }
-
-
-    if (
         state.lastActiveDate ===
         today
     ) {
@@ -80,64 +45,46 @@ export function updateStreak(
     }
 
 
-    const difference =
-        daysBetween(
-            state.lastActiveDate,
-            today
-        );
-
-
     if (
-        difference === 1
+        !state.lastActiveDate
     ) {
 
-        state.streak++;
+        state.streak =
+            1;
 
     } else {
 
-        state.streak = 1;
+        const previous =
+            new Date(
+                state.lastActiveDate
+            );
+
+
+        const current =
+            new Date(today);
+
+
+        const days =
+            Math.round(
+                (
+                    current -
+                    previous
+                ) / 86400000
+            );
+
+
+        state.streak =
+            days === 1
+
+                ? state.streak + 1
+
+                : 1;
 
     }
 
 
     state.lastActiveDate =
         today;
-
-}
-
-
-export function canClaimDailyReward(
-    state
-) {
-
-    return (
-        state.lastRewardDate !==
-        todayKey()
-    );
-
-}
-
-
-export function claimDailyReward(
-    state
-) {
-
-    if (
-        !canClaimDailyReward(
-            state
-        )
-    ) {
-
-        return 0;
-
-    }
-
-
-    state.lastRewardDate =
-        todayKey();
-
-
-    return 25;
 
 }
 
@@ -151,8 +98,11 @@ export function shuffle(
 
 
     for (
-        let i = result.length - 1;
+        let i =
+            result.length - 1;
+
         i > 0;
+
         i--
     ) {
 
@@ -167,8 +117,10 @@ export function shuffle(
             result[i],
             result[j]
         ] = [
+
             result[j],
             result[i]
+
         ];
 
     }
