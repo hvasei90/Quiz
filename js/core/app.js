@@ -1,15 +1,13 @@
 import {
     DEFAULT_STATE,
     calculateLevel,
-    hasCompletedStage
+    isStageCompleted
 } from "./state.js";
-
 
 import {
     loadState,
     saveState
 } from "./storage.js";
-
 
 import {
     updateStreak,
@@ -18,6 +16,13 @@ import {
     escapeHTML
 } from "./utils.js";
 
+import {
+    getCurrentUser,
+    getRegisteredUsers,
+    login,
+    logout,
+    register
+} from "./auth.js";
 
 import {
     QuizEngine,
@@ -25,122 +30,87 @@ import {
 } from "./quiz.js";
 
 
-import {
-    getCurrentUser,
-    isLoggedIn,
-    register,
-    login,
-    logout
-} from "./auth.js";
-
-
-
-/*
- * نام کاربر فعلی
- */
-
-let currentUsername =
-    getCurrentUser() ||
-    "guest";
-
+const currentUser =
+    getCurrentUser();
 
 
 const state =
     loadState(
+
         DEFAULT_STATE,
-        currentUsername
+
+        currentUser ||
+        "بازیکن مهمان"
+
     );
 
 
-
-/*
- * اگر کاربر وارد شده باشد،
- * نام حساب روی state قرار می‌گیرد.
- */
-
-if (
-    isLoggedIn()
-) {
-
-    state.username =
-        currentUsername;
-
-}
-
+state.username =
+    currentUser ||
+    "بازیکن مهمان";
 
 
 const quiz =
     new QuizEngine(
+
         state,
+
         () =>
             saveState(
+
                 state,
-                currentUsername
+
+                currentUser ||
+                "بازیکن مهمان"
+
             )
+
     );
 
 
-
 const app = {
-
 
     category:
         state.currentCategory ||
         "general",
 
-
     timer: null,
 
-
     timeLeft: 0,
-
 
     currentAnswerLocked:
         false,
 
+    authMode:
+        "login",
 
 
     async init() {
 
-
         this.applyTheme();
-
 
         this.bindNavigation();
 
-
-        this.bindQuizTabs();
-
-
-        this.bindCategoryButtons();
-
+        this.bindCategoryTabs();
 
         this.bindThemeButton();
 
+        this.bindAuth();
 
         this.bindDailyReward();
 
+        this.bindSupport();
 
-        this.bindChat();
-
-
-        this.bindAuth();
-
-
-        this.updateAuthUI();
-
+        this.renderAuthButton();
 
         this.renderAll();
-
 
         await this.loadQuiz();
 
     },
 
 
-
     bindNavigation() {
-
 
         document
             .querySelectorAll(
@@ -149,31 +119,37 @@ const app = {
             .forEach(
                 button => {
 
-
                     button.addEventListener(
                         "click",
                         async () => {
-
 
                             const page =
                                 button.dataset.page;
 
 
+                            this.showPage(
+                                page
+                            );
+
 
                             if (
-                                button.dataset.category
+                                page ===
+                                "quiz"
                             ) {
 
-                                this.category =
-                                    button.dataset.category;
+                                await this.loadQuiz();
 
                             }
 
 
+                            if (
+                                page ===
+                                "leaderboard"
+                            ) {
 
-                            this.showPage(
-                                page
-                            );
+                                this.renderLeaderboard();
+
+                            }
 
                         }
                     );
@@ -184,11 +160,7 @@ const app = {
     },
 
 
-
-    showPage(
-        page
-    ) {
-
+    showPage(page) {
 
         document
             .querySelectorAll(
@@ -205,17 +177,13 @@ const app = {
             );
 
 
-
         const target =
             document.getElementById(
                 page
             );
 
 
-
-        if (
-            target
-        ) {
+        if (target) {
 
             target.classList.add(
                 "active"
@@ -224,21 +192,29 @@ const app = {
         }
 
 
-
         if (
-            page === "quiz"
+            page ===
+            "quiz"
         ) {
 
             this.renderStages();
 
         }
 
+
+        if (
+            page ===
+            "leaderboard"
+        ) {
+
+            this.renderLeaderboard();
+
+        }
+
     },
 
 
-
-    bindQuizTabs() {
-
+    bindCategoryTabs() {
 
         document
             .querySelectorAll(
@@ -247,100 +223,12 @@ const app = {
             .forEach(
                 button => {
 
-
                     button.addEventListener(
                         "click",
                         async () => {
-
 
                             this.category =
                                 button.dataset.categoryTab;
-
-
-
-                            state.currentCategory =
-                                this.category;
-
-
-
-                            saveState(
-                                state,
-                                currentUsername
-                            );
-
-
-
-                            document
-                                .querySelectorAll(
-                                    ".quiz-tab"
-                                )
-                                .forEach(
-                                    tab => {
-
-                                        tab.classList.remove(
-                                            "active"
-                                        );
-
-                                    }
-                                );
-
-
-
-                            button.classList.add(
-                                "active"
-                            );
-
-
-
-                            await this.loadQuiz();
-
-                        }
-                    );
-
-                }
-            );
-
-    },
-
-
-
-    bindCategoryButtons() {
-
-
-        document
-            .querySelectorAll(
-                "[data-category]"
-            )
-            .forEach(
-                button => {
-
-
-                    button.addEventListener(
-                        "click",
-                        async () => {
-
-
-                            this.category =
-                                button.dataset.category;
-
-
-
-                            state.currentCategory =
-                                this.category;
-
-
-
-                            saveState(
-                                state,
-                                currentUsername
-                            );
-
-
-
-                            this.showPage(
-                                "quiz"
-                            );
-
 
 
                             document
@@ -351,14 +239,16 @@ const app = {
                                     tab => {
 
                                         tab.classList.toggle(
+
                                             "active",
-                                            tab.dataset.categoryTab ===
-                                            this.category
+
+                                            tab ===
+                                            button
+
                                         );
 
                                     }
                                 );
-
 
 
                             await this.loadQuiz();
@@ -372,12 +262,9 @@ const app = {
     },
 
 
-
     async loadQuiz() {
 
-
         try {
-
 
             await quiz.loadCategory(
                 this.category
@@ -386,24 +273,16 @@ const app = {
 
             this.renderStages();
 
-
-
         } catch (error) {
 
-
-            console.error(
-                "Quiz loading error:",
-                error
-            );
+            console.error(error);
 
         }
 
     },
 
 
-
     getUnlockedStage() {
-
 
         return this.category ===
             "general"
@@ -415,9 +294,19 @@ const app = {
     },
 
 
+    getCompletedStages() {
+
+        return this.category ===
+            "general"
+
+            ? state.completedGeneralStages
+
+            : state.completedFunStages;
+
+    },
+
 
     renderStages() {
-
 
         const container =
             document.getElementById(
@@ -425,24 +314,19 @@ const app = {
             );
 
 
-        if (
-            !container
-        ) {
-
-            return;
-
-        }
-
+        if (!container) return;
 
 
         const unlocked =
             this.getUnlockedStage();
 
 
+        const completed =
+            this.getCompletedStages();
+
 
         container.innerHTML =
             "";
-
 
 
         for (
@@ -451,19 +335,25 @@ const app = {
             stage++
         ) {
 
+            /*
+             * مهمان فقط تا مرحله ۳
+             * اجازه بازی دارد.
+             */
 
-            const completed =
-                hasCompletedStage(
-                    state,
-                    this.category,
-                    stage
-                );
+            const guestLocked =
+                !currentUser &&
+                stage > 3;
 
 
             const locked =
-                stage >
-                unlocked;
+                stage > unlocked ||
+                guestLocked;
 
+
+            const done =
+                completed.includes(
+                    stage
+                );
 
 
             const card =
@@ -472,66 +362,20 @@ const app = {
                 );
 
 
-
             card.type =
                 "button";
 
 
-
             card.className =
-                "stage-card";
-
-
-            if (
-                locked
-            ) {
-
-                card.classList.add(
-                    "locked"
-                );
-
-            }
-
-
-            if (
-                completed
-            ) {
-
-                card.classList.add(
-                    "completed"
-                );
-
-            }
-
-
-
-            /*
-             * متن داخل کارت مرحله
-             *
-             * دیگر عبارت «۲ سؤال تصادفی»
-             * نمایش داده نمی‌شود.
-             */
-
-            let statusText =
-                "آماده بازی";
-
-
-            if (
-                locked
-            ) {
-
-                statusText =
-                    "قفل است";
-
-            } else if (
-                completed
-            ) {
-
-                statusText =
-                    "✓ این مرحله را بردی!";
-
-            }
-
+                `stage-card ${
+                    locked
+                        ? "locked"
+                        : ""
+                } ${
+                    done
+                        ? "completed"
+                        : ""
+                }`;
 
 
             card.innerHTML = `
@@ -541,7 +385,7 @@ const app = {
                     ${
                         locked
                             ? "🔒"
-                            : completed
+                            : done
                                 ? "✓"
                                 : stage
                     }
@@ -557,31 +401,59 @@ const app = {
 
 
                     <small>
-                        ${statusText}
+
+                        ${
+                            guestLocked
+
+                                ? "نیاز به ثبت‌نام"
+
+                                : locked
+
+                                    ? "قفل است"
+
+                                    : done
+
+                                        ? "این مرحله را بردی ✓"
+
+                                        : "آماده بازی"
+
+                        }
+
                     </small>
+
+                </span>
+
+
+                <span class="stage-xp">
+
+                    +${QUIZ_CONFIG.stageXP} XP
 
                 </span>
 
             `;
 
 
-
-            if (
-                !locked
-            ) {
-
+            if (!locked) {
 
                 card.addEventListener(
                     "click",
                     () =>
-                        this.handleStageClick(
-                            stage,
-                            completed
+                        this.startStage(
+                            stage
                         )
                 );
 
-            }
+            } else if (
+                guestLocked
+            ) {
 
+                card.addEventListener(
+                    "click",
+                    () =>
+                        this.showGuestLimitMessage()
+                );
+
+            }
 
 
             container.appendChild(
@@ -593,28 +465,68 @@ const app = {
     },
 
 
+    async startStage(stage) {
 
-    handleStageClick(
-        stage,
-        completed
-    ) {
+        const guestLimit =
+            3;
 
 
         if (
-            completed
+            !currentUser &&
+            stage > guestLimit
         ) {
 
+            this.showGuestLimitMessage();
 
-            const confirmed =
-                confirm(
-                    "شما قبلاً امتیاز این مرحله را کسب کرده‌اید.\n\nآیا مایلید دوباره این مرحله را بازی کنید؟\n\nنکته: بازی کردن دوباره این مرحله نه از شما قلب کم می‌کند و نه به شما امتیاز اضافه خواهد کرد."
+            return;
+
+        }
+
+
+        const completed =
+            isStageCompleted(
+
+                state,
+
+                this.category,
+
+                stage
+
+            );
+
+
+        const unlocked =
+            this.getUnlockedStage();
+
+
+        if (
+            stage > unlocked
+        ) {
+
+            return;
+
+        }
+
+
+        let replay =
+            false;
+
+
+        if (completed) {
+
+            replay =
+                window.confirm(
+
+                    "شما قبلاً امتیاز این مرحله را کسب کرده‌اید.\n\n" +
+
+                    "آیا مایلید دوباره این مرحله را بازی کنید؟\n\n" +
+
+                    "بازی کردن در این مرحله نه از شما قلب کم می‌کند و نه XP اضافه می‌کند."
+
                 );
 
 
-
-            if (
-                !confirmed
-            ) {
+            if (!replay) {
 
                 return;
 
@@ -623,53 +535,21 @@ const app = {
         }
 
 
-
-        this.startStage(
-            stage
-        );
-
-    },
-
-
-
-    async startStage(
-        stage
-    ) {
-
-
-        /*
-         * اگر مرحله قبلاً برده شده باشد،
-         * Replay محسوب می‌شود و Heart لازم ندارد.
-         */
-
-        const replay =
-            hasCompletedStage(
-                state,
-                this.category,
-                stage
-            );
-
-
-
-        /*
-         * برای مرحله جدید باید Heart داشته باشیم.
-         */
-
         if (
             !replay &&
             state.hearts <= 0
         ) {
 
-
             alert(
-                "❤️ قلب کافی نداری. برای شروع یک مرحله جدید باید حداقل یک قلب داشته باشی."
+
+                "قلب‌های شما تمام شده است. برای بازی دوباره باید منتظر بمانید."
+
             );
 
 
             return;
 
         }
-
 
 
         await quiz.loadCategory(
@@ -677,34 +557,37 @@ const app = {
         );
 
 
+        quiz.startStage(
 
-        const selected =
-            quiz.startStage(
-                this.category,
-                stage
-            );
+            this.category,
 
+            stage,
+
+            replay
+
+        );
 
 
         if (
-            selected.length === 0
+            !quiz.getQuestionCount()
         ) {
 
-
             alert(
-                "برای این مرحله هنوز سؤال ثبت نشده است."
+                "برای این مرحله هنوز سوالی ثبت نشده است."
             );
-
 
             return;
 
         }
 
 
-
         this.currentAnswerLocked =
             false;
 
+
+        this.showPage(
+            "quiz"
+        );
 
 
         this.renderQuestion();
@@ -712,13 +595,45 @@ const app = {
     },
 
 
+    showGuestLimitMessage() {
+
+        const message =
+
+            "حالت مهمان فقط اجازه بازی تا مرحله ۳ هر بخش را دارد.\n\n" +
+
+            "برای ادامه مراحل، لطفاً ثبت‌نام کن.";
+
+
+        const goToAuth =
+            window.confirm(
+
+                `${message}\n\n` +
+
+                "می‌خواهی همین حالا وارد بخش ثبت‌نام شوی؟"
+
+            );
+
+
+        if (goToAuth) {
+
+            this.setAuthMode(
+                "register"
+            );
+
+
+            this.showPage(
+                "auth"
+            );
+
+        }
+
+    },
+
 
     renderQuestion() {
 
-
         const question =
             quiz.getCurrentQuestion();
-
 
 
         const box =
@@ -727,34 +642,20 @@ const app = {
             );
 
 
+        if (!question) {
 
-        if (
-            !question ||
-            !box
-        ) {
-
-
-            if (
-                box
-            ) {
-
-                box.classList.add(
-                    "hidden"
-                );
-
-            }
-
+            box.classList.add(
+                "hidden"
+            );
 
             return;
 
         }
 
 
-
         box.classList.remove(
             "hidden"
         );
-
 
 
         document.getElementById(
@@ -769,7 +670,6 @@ const app = {
                 : "🎮 تفریحی";
 
 
-
         document.getElementById(
             "questionNumber"
         ).textContent =
@@ -777,27 +677,25 @@ const app = {
             `${quiz.currentQuestion + 1}/${quiz.getQuestionCount()}`;
 
 
-
         document.getElementById(
             "questionText"
         ).textContent =
-            question.question;
 
-
-
-        const progress =
-            (
-                quiz.currentQuestion /
-                quiz.getQuestionCount()
-            ) * 100;
-
+            question.question ||
+            question.q ||
+            "";
 
 
         document.getElementById(
             "quizProgress"
         ).style.width =
-            `${progress}%`;
 
+            `${
+                (
+                    quiz.currentQuestion /
+                    quiz.getQuestionCount()
+                ) * 100
+            }%`;
 
 
         const answers =
@@ -806,24 +704,18 @@ const app = {
             );
 
 
-
         answers.innerHTML =
             "";
 
 
-
         question.options.forEach(
-            (
-                option,
-                index
-            ) => {
 
+            (option, index) => {
 
                 const button =
                     document.createElement(
                         "button"
                     );
-
 
 
                 button.type =
@@ -838,15 +730,16 @@ const app = {
                     option;
 
 
-
                 button.addEventListener(
+
                     "click",
+
                     () =>
                         this.submitAnswer(
                             index
                         )
-                );
 
+                );
 
 
                 answers.appendChild(
@@ -854,8 +747,8 @@ const app = {
                 );
 
             }
-        );
 
+        );
 
 
         document.getElementById(
@@ -864,46 +757,35 @@ const app = {
             "";
 
 
-
-        document
-            .getElementById(
-                "nextQuestionBtn"
-            )
-            .classList.add(
-                "hidden"
-            );
-
+        document.getElementById(
+            "nextQuestionBtn"
+        ).classList.add(
+            "hidden"
+        );
 
 
         this.updateCombo();
-
 
         this.startTimer();
 
     },
 
 
-
     startTimer() {
 
-
         this.stopTimer();
-
 
 
         this.timeLeft =
             QUIZ_CONFIG.questionTime;
 
 
-
         this.updateTimer();
-
 
 
         this.timer =
             setInterval(
                 () => {
-
 
                     this.timeLeft--;
 
@@ -911,11 +793,9 @@ const app = {
                     this.updateTimer();
 
 
-
                     if (
                         this.timeLeft <= 0
                     ) {
-
 
                         this.stopTimer();
 
@@ -933,14 +813,9 @@ const app = {
     },
 
 
-
     stopTimer() {
 
-
-        if (
-            this.timer
-        ) {
-
+        if (this.timer) {
 
             clearInterval(
                 this.timer
@@ -955,9 +830,7 @@ const app = {
     },
 
 
-
     updateTimer() {
-
 
         const timer =
             document.getElementById(
@@ -971,7 +844,6 @@ const app = {
             );
 
 
-
         if (
             !timer ||
             !progress
@@ -982,52 +854,23 @@ const app = {
         }
 
 
-
         timer.textContent =
             `${this.timeLeft}s`;
 
 
-
-        const percentage =
-            (
-                this.timeLeft /
-                QUIZ_CONFIG.questionTime
-            ) * 100;
-
-
-
         progress.style.width =
-            `${Math.max(
-                0,
-                percentage
-            )}%`;
 
-
-
-        if (
-            this.timeLeft <= 5
-        ) {
-
-            timer.classList.add(
-                "timer-danger"
-            );
-
-        } else {
-
-            timer.classList.remove(
-                "timer-danger"
-            );
-
-        }
+            `${
+                (
+                    this.timeLeft /
+                    QUIZ_CONFIG.questionTime
+                ) * 100
+            }%`;
 
     },
 
 
-
-    submitAnswer(
-        index
-    ) {
-
+    submitAnswer(index) {
 
         if (
             this.currentAnswerLocked
@@ -1038,21 +881,15 @@ const app = {
         }
 
 
-
         this.currentAnswerLocked =
             true;
-
 
 
         this.stopTimer();
 
 
-
         const result =
-            quiz.answer(
-                index
-            );
-
+            quiz.answer(index);
 
 
         const buttons =
@@ -1061,38 +898,14 @@ const app = {
             );
 
 
-
         buttons.forEach(
-            (
-                button,
-                buttonIndex
-            ) => {
-
+            button => {
 
                 button.disabled =
                     true;
 
-
-
-                if (
-                    buttonIndex ===
-                    Number(
-                        result.correctAnswer ===
-                        button.textContent
-                            ? buttonIndex
-                            : -1
-                    )
-                ) {
-
-                    button.classList.add(
-                        "correct-answer"
-                    );
-
-                }
-
             }
         );
-
 
 
         const resultBox =
@@ -1101,16 +914,17 @@ const app = {
             );
 
 
+        if (result.correct) {
 
-        if (
-            result.correct
-        ) {
+            if (
+                !result.replay
+            ) {
 
+                updateStreak(
+                    state
+                );
 
-            updateStreak(
-                state
-            );
-
+            }
 
 
             resultBox.innerHTML = `
@@ -1118,16 +932,18 @@ const app = {
                 <div class="result-success">
 
                     <strong>
-                        ✓ پاسخ درست!
+                        ✓ درست!
                     </strong>
-
 
                     <span>
 
                         ${
-                            result.replay
-                                ? "این مرحله Replay است؛ XP اضافه نمی‌شود."
-                                : `+${result.earnedXP} XP`
+                            result.finished
+
+                                ? "امتیاز مرحله در پایان محاسبه می‌شود."
+
+                                : "آفرین!"
+
                         }
 
                     </span>
@@ -1136,10 +952,7 @@ const app = {
 
             `;
 
-
-
         } else {
-
 
             resultBox.innerHTML = `
 
@@ -1149,8 +962,11 @@ const app = {
 
                         ${
                             index === null
+
                                 ? "⏰ زمان تمام شد!"
+
                                 : "✕ پاسخ نادرست"
+
                         }
 
                     </strong>
@@ -1158,10 +974,7 @@ const app = {
 
                     <span>
 
-                        پاسخ درست:
-                        ${escapeHTML(
-                            result.correctAnswer
-                        )}
+                        این پاسخ فقط روی نتیجه نهایی مرحله اثر می‌گذارد.
 
                     </span>
 
@@ -1172,19 +985,19 @@ const app = {
         }
 
 
-
         if (
             result.explanation
         ) {
-
 
             resultBox.innerHTML += `
 
                 <p class="explanation">
 
-                    ${escapeHTML(
-                        result.explanation
-                    )}
+                    ${
+                        escapeHTML(
+                            result.explanation
+                        )
+                    }
 
                 </p>
 
@@ -1193,12 +1006,9 @@ const app = {
         }
 
 
-
         this.updateCombo();
 
-
         this.renderAll();
-
 
 
         const nextButton =
@@ -1207,14 +1017,13 @@ const app = {
             );
 
 
-
         nextButton.classList.remove(
             "hidden"
         );
 
 
-
         nextButton.textContent =
+
             result.finished
 
                 ? "مشاهده نتیجه مرحله"
@@ -1222,23 +1031,18 @@ const app = {
                 : "سؤال بعدی →";
 
 
-
         nextButton.onclick =
             () => {
-
 
                 if (
                     result.finished
                 ) {
 
-
                     this.showStageResult(
                         result
                     );
 
-
                 } else {
-
 
                     this.currentAnswerLocked =
                         false;
@@ -1253,21 +1057,15 @@ const app = {
     },
 
 
-
-    showStageResult(
-        result
-    ) {
-
+    showStageResult(result) {
 
         this.stopTimer();
-
 
 
         const box =
             document.getElementById(
                 "quizBox"
             );
-
 
 
         const percentage =
@@ -1277,86 +1075,32 @@ const app = {
             );
 
 
-
-        let title = "";
-
-
-        let icon = "";
-
-
-        let message = "";
-
-
-
-        if (
-            result.replay
-        ) {
-
-
-            icon =
-                "🔁";
-
-
-            title =
-                "Replay مرحله";
-
-
-            message =
-                "این مرحله را قبلاً با موفقیت گذرانده‌ای.\nبازی دوباره هیچ XP یا Heart به تو نمی‌دهد.";
-
-        } else if (
-            result.passed
-        ) {
-
-
-            icon =
-                "🎉";
-
-
-            title =
-                "مرحله را با موفقیت گذراندی!";
-
-
-            message =
-                "مرحله بعد برایت باز شد.";
-
-        } else {
-
-
-            icon =
-                "📚";
-
-
-            title =
-                "این مرحله را باختی";
-
-
-            message =
-                "برای عبور از این مرحله باید دوباره تلاش کنی.";
-
-        }
-
-
-
         box.innerHTML = `
 
             <div class="stage-result">
 
-
                 <div class="stage-result-icon">
 
-                    ${icon}
+                    ${
+                        result.passed
+                            ? "🎉"
+                            : "📚"
+                    }
 
                 </div>
 
 
-                <p class="eyebrow">
-                    STAGE RESULT
-                </p>
-
-
                 <h2>
-                    ${title}
+
+                    ${
+                        result.passed
+
+                            ? "مرحله را با موفقیت گذراندی!"
+
+                            : "این مرحله هنوز کامل نشده"
+
+                    }
+
                 </h2>
 
 
@@ -1367,7 +1111,7 @@ const app = {
                 </div>
 
 
-                <p class="result-details">
+                <p>
 
                     ${result.correctAnswers}
 
@@ -1380,64 +1124,18 @@ const app = {
                 </p>
 
 
-                <div class="result-breakdown">
-
-
-                    <div>
-
-                        <strong>
-                            ✓
-                        </strong>
-
-                        <span>
-
-                            ${result.correctAnswers}
-                            درست
-
-                        </span>
-
-                    </div>
-
-
-                    <div>
-
-                        <strong>
-                            ✕
-                        </strong>
-
-                        <span>
-
-                            ${result.wrongAnswers}
-                            غلط
-
-                        </span>
-
-                    </div>
-
-
-                </div>
-
-
                 ${
-                    result.replay
+                    result.passed
 
-                        ? `
-
-                            <p class="result-message">
-
-                                🔁 ${message}
-
-                            </p>
-
-                        `
-
-                        : result.passed
+                        ? result.replay
 
                             ? `
 
-                                <p class="result-message success-text">
+                                <p class="result-message">
 
-                                    🔓 ${message}
+                                    این یک بازی مجدد بود؛
+
+                                    XP و قلب تغییری نکرد.
 
                                 </p>
 
@@ -1447,35 +1145,41 @@ const app = {
 
                                 <p class="result-message">
 
-                                    ❌ ${message}
+                                    +${result.earnedXP} XP
 
-                                    ${
-                                        result.heartLost
-                                            ? "<br>❤️ یک قلب از دست دادی."
-                                            : ""
-                                    }
+                                    برای تکمیل مرحله گرفتی
+
+                                    و مرحله بعد باز شد.
 
                                 </p>
 
                             `
-                }
 
+                        : result.replay
 
-                ${
-                    result.replay
+                            ? `
 
-                        ? `
+                                <p class="result-message">
 
-                            <p class="result-message">
+                                    این بازی مجدد بود؛
 
-                                💡 این Replay هیچ XP یا Heart
-                                به حساب تو اضافه یا از آن کم نمی‌کند.
+                                    قلبی کم نشد.
 
-                            </p>
+                                </p>
 
-                        `
+                            `
 
-                        : ""
+                            : `
+
+                                <p class="result-message">
+
+                                    یک قلب بابت کامل نکردن
+
+                                    مرحله کم شد.
+
+                                </p>
+
+                            `
 
                 }
 
@@ -1483,45 +1187,43 @@ const app = {
                 <button
                     class="primary-btn"
                     id="closeResult"
-                    type="button">
+                >
 
                     بازگشت به مراحل
 
                 </button>
-
 
             </div>
 
         `;
 
 
+        document.getElementById(
+            "closeResult"
+        ).onclick = () => {
 
-        document
-            .getElementById(
-                "closeResult"
-            )
-            .onclick =
-            () => {
+            this.showPage(
+                "quiz"
+            );
 
 
-                box.classList.add(
+            this.renderStages();
+
+
+            document
+                .getElementById(
+                    "quizBox"
+                )
+                .classList.add(
                     "hidden"
                 );
 
-
-                this.renderStages();
-
-
-                this.renderAll();
-
-            };
+        };
 
     },
 
 
-
     updateCombo() {
-
 
         const combo =
             document.getElementById(
@@ -1529,10 +1231,7 @@ const app = {
             );
 
 
-
-        if (
-            combo
-        ) {
+        if (combo) {
 
             combo.textContent =
                 quiz.combo;
@@ -1542,9 +1241,7 @@ const app = {
     },
 
 
-
     renderAll() {
-
 
         state.level =
             calculateLevel(
@@ -1552,142 +1249,157 @@ const app = {
             );
 
 
+        const values = {
 
-        document.getElementById(
-            "homeXP"
-        ).textContent =
-            state.xp;
+            homeXP:
+                state.xp,
 
+            homeStreak:
+                state.streak,
 
+            homeLevel:
+                state.level,
 
-        document.getElementById(
-            "homeStreak"
-        ).textContent =
-            state.streak;
+            quizXP:
+                state.xp,
 
+            quizStreak:
+                state.streak,
 
+            heartValue:
+                state.hearts
 
-        document.getElementById(
-            "homeLevel"
-        ).textContent =
-            state.level;
-
-
-
-        document.getElementById(
-            "quizXP"
-        ).textContent =
-            state.xp;
+        };
 
 
+        Object.entries(
+            values
+        ).forEach(
+            ([id, value]) => {
 
-        document.getElementById(
-            "quizStreak"
-        ).textContent =
-            state.streak;
+                const element =
+                    document.getElementById(
+                        id
+                    );
 
 
+                if (element) {
 
-        document.getElementById(
-            "heartValue"
-        ).textContent =
-            state.hearts;
+                    element.textContent =
+                        value;
 
+                }
+
+            }
+        );
 
 
         this.renderProfile();
 
-
         this.renderLeaderboard();
 
-
-        this.updateDailyRewardButton();
-
-
-        this.updateAuthUI();
-
+        this.renderAuthButton();
 
 
         saveState(
+
             state,
-            currentUsername
+
+            currentUser ||
+            "بازیکن مهمان"
+
         );
 
     },
 
 
-
     renderProfile() {
-
 
         const name =
             state.username ||
             "بازیکن مهمان";
 
 
+        const set =
+            (id, value) => {
 
-        document.getElementById(
-            "profileName"
-        ).textContent =
-            name;
-
-
-
-        document.getElementById(
-            "profileLevel"
-        ).textContent =
-            `Level ${state.level}`;
+                const element =
+                    document.getElementById(
+                        id
+                    );
 
 
+                if (element) {
 
-        document.getElementById(
-            "profileXP"
-        ).textContent =
-            state.xp;
+                    element.textContent =
+                        value;
 
+                }
 
-
-        document.getElementById(
-            "profileStreak"
-        ).textContent =
-            state.streak;
+            };
 
 
-
-        document.getElementById(
-            "profileGeneral"
-        ).textContent =
-            state.generalStage;
-
-
-
-        document.getElementById(
-            "profileFun"
-        ).textContent =
-            state.funStage;
-
-
-
-        document.getElementById(
-            "profileBestCombo"
-        ).textContent =
-            state.bestCombo;
-
-
-
-        document.getElementById(
-            "profileAvatar"
-        ).textContent =
+        set(
+            "profileName",
             name
-                .charAt(0)
-                .toUpperCase();
+        );
+
+
+        set(
+            "profileLevel",
+            `سطح ${state.level}`
+        );
+
+
+        set(
+            "profileXP",
+            state.xp
+        );
+
+
+        set(
+            "profileStreak",
+            state.streak
+        );
+
+
+        set(
+            "profileGeneral",
+            state.generalStage
+        );
+
+
+        set(
+            "profileFun",
+            state.funStage
+        );
+
+
+        set(
+            "profileBestCombo",
+            state.bestCombo
+        );
+
+
+        const avatar =
+            document.getElementById(
+                "profileAvatar"
+            );
+
+
+        if (avatar) {
+
+            avatar.textContent =
+                name
+                    .charAt(0)
+                    .toUpperCase();
+
+        }
 
     },
 
 
-
     renderLeaderboard() {
-
 
         const body =
             document.getElementById(
@@ -1695,54 +1407,241 @@ const app = {
             );
 
 
+        if (!body) return;
+
+
+        const users =
+            getRegisteredUsers();
+
+
+        const players =
+            users.map(
+                user => {
+
+                    const playerState =
+                        loadState(
+
+                            DEFAULT_STATE,
+
+                            user.username
+
+                        );
+
+
+                    const generalCompleted =
+
+                        Array.isArray(
+                            playerState.completedGeneralStages
+                        )
+
+                            ? playerState.completedGeneralStages
+
+                            : [];
+
+
+                    const funCompleted =
+
+                        Array.isArray(
+                            playerState.completedFunStages
+                        )
+
+                            ? playerState.completedFunStages
+
+                            : [];
+
+
+                    return {
+
+                        username:
+                            user.username,
+
+                        xp:
+                            Number(
+                                playerState.xp
+                            ) || 0,
+
+                        level:
+                            calculateLevel(
+
+                                Number(
+                                    playerState.xp
+                                ) || 0
+
+                            ),
+
+                        generalStage:
+
+                            generalCompleted.length
+
+                                ? Math.max(
+                                    ...generalCompleted
+                                )
+
+                                : 0,
+
+                        funStage:
+
+                            funCompleted.length
+
+                                ? Math.max(
+                                    ...funCompleted
+                                )
+
+                                : 0
+
+                    };
+
+                }
+            );
+
+
+        players.sort(
+            (a, b) => {
+
+                if (
+                    b.xp !==
+                    a.xp
+                ) {
+
+                    return (
+                        b.xp -
+                        a.xp
+                    );
+
+                }
+
+
+                return a.username.localeCompare(
+                    b.username,
+                    "fa"
+                );
+
+            }
+        );
+
 
         if (
-            !body
+            !players.length
         ) {
+
+            body.innerHTML = `
+
+                <tr>
+
+                    <td
+                        colspan="5"
+                        class="empty-leaderboard"
+                    >
+
+                        هنوز بازیکن ثبت‌نام‌شده‌ای وجود ندارد.
+
+                    </td>
+
+                </tr>
+
+            `;
+
 
             return;
 
         }
 
 
+        body.innerHTML =
+            players
+                .map(
 
-        body.innerHTML = `
+                    (player, index) => `
 
-            <tr>
+                        <tr
+                            class="${
+                                currentUser ===
+                                player.username
+                                    ? "current-player"
+                                    : ""
+                            }"
+                        >
 
-                <td>
-                    1
-                </td>
+                            <td>
 
+                                ${index + 1}
 
-                <td>
-
-                    ${escapeHTML(
-                        state.username
-                    )}
-
-                </td>
-
-
-                <td>
-                    ${state.xp}
-                </td>
+                            </td>
 
 
-                <td>
-                    ${state.level}
-                </td>
+                            <td>
 
-            </tr>
+                                <strong>
 
-        `;
+                                    ${
+                                        escapeHTML(
+                                            player.username
+                                        )
+                                    }
+
+                                </strong>
+
+
+                                ${
+                                    currentUser ===
+                                    player.username
+
+                                        ? `
+
+                                            <span
+                                                class="you-badge"
+                                            >
+
+                                                شما
+
+                                            </span>
+
+                                        `
+
+                                        : ""
+
+                                }
+
+                            </td>
+
+
+                            <td>
+
+                                ${player.xp}
+                                XP
+
+                            </td>
+
+
+                            <td>
+
+                                سطح
+                                ${player.level}
+
+                            </td>
+
+
+                            <td>
+
+                                ${player.generalStage}
+
+                                /
+
+                                ${player.funStage}
+
+                            </td>
+
+                        </tr>
+
+                    `
+
+                )
+                .join("");
 
     },
 
 
-
     bindThemeButton() {
-
 
         const button =
             document.getElementById(
@@ -1750,23 +1649,15 @@ const app = {
             );
 
 
-
-        if (
-            !button
-        ) {
-
-            return;
-
-        }
-
+        if (!button) return;
 
 
         button.addEventListener(
             "click",
             () => {
 
-
                 state.theme =
+
                     state.theme ===
                     "dark"
 
@@ -1775,10 +1666,13 @@ const app = {
                         : "dark";
 
 
-
                 saveState(
+
                     state,
-                    currentUsername
+
+                    currentUser ||
+                    "بازیکن مهمان"
+
                 );
 
 
@@ -1790,16 +1684,16 @@ const app = {
     },
 
 
-
     applyTheme() {
-
 
         document.documentElement
             .setAttribute(
-                "data-theme",
-                state.theme
-            );
 
+                "data-theme",
+
+                state.theme
+
+            );
 
 
         const button =
@@ -1808,150 +1702,38 @@ const app = {
             );
 
 
-
-        if (
-            button
-        ) {
-
+        if (button) {
 
             button.textContent =
+
                 state.theme ===
                 "dark"
 
-                    ? "☀️"
+                    ? "☀️ حالت روشن"
 
-                    : "🌙";
-
-
-            button.title =
-                state.theme ===
-                "dark"
-
-                    ? "حالت روشن"
-
-                    : "حالت تاریک";
+                    : "🌙 حالت تاریک";
 
         }
 
     },
-
 
 
     bindDailyReward() {
 
-
         const button =
             document.getElementById(
                 "dailyReward"
             );
 
 
-
-        if (
-            !button
-        ) {
-
-            return;
-
-        }
-
-
-
-        button.addEventListener(
-            "click",
-            () => {
-
-
-                const reward =
-                    claimDailyReward(
-                        state
-                    );
-
-
-                if (
-                    reward <= 0
-                ) {
-
-                    return;
-
-                }
-
-
-
-                state.xp +=
-                    reward;
-
-
-
-                state.level =
-                    calculateLevel(
-                        state.xp
-                    );
-
-
-
-                saveState(
-                    state,
-                    currentUsername
-                );
-
-
-
-                this.renderAll();
-
-
-                alert(
-                    `🎁 ${reward} XP جایزه روزانه گرفتی!`
-                );
-
-            }
-        );
-
-
-
-        this.updateDailyRewardButton();
-
-    },
-
-
-
-    updateDailyRewardButton() {
-
-
-        const button =
-            document.getElementById(
-                "dailyReward"
-            );
-
+        if (!button) return;
 
 
         if (
-            !button
-        ) {
-
-            return;
-
-        }
-
-
-
-        if (
-            canClaimDailyReward(
+            !canClaimDailyReward(
                 state
             )
         ) {
-
-
-            button.disabled =
-                false;
-
-
-            button.textContent =
-                "دریافت +25 XP";
-
-
-        } else {
-
 
             button.disabled =
                 true;
@@ -1960,62 +1742,50 @@ const app = {
             button.textContent =
                 "✓ جایزه امروز دریافت شده";
 
-        }
-
-    },
-
-
-
-    bindChat() {
-
-
-        const input =
-            document.getElementById(
-                "chatInput"
-            );
-
-
-        const button =
-            document.getElementById(
-                "sendChat"
-            );
-
-
-
-        if (
-            !input ||
-            !button
-        ) {
 
             return;
 
         }
-
 
 
         button.addEventListener(
             "click",
             () => {
 
-
-                if (
-                    !input.value.trim()
-                ) {
-
-                    return;
-
-                }
+                const reward =
+                    claimDailyReward(
+                        state
+                    );
 
 
+                state.xp +=
+                    reward;
 
-                alert(
-                    "💬 چت عمومی در نسخه آنلاین فعال خواهد شد."
+
+                state.level =
+                    calculateLevel(
+                        state.xp
+                    );
+
+
+                saveState(
+
+                    state,
+
+                    currentUser ||
+                    "بازیکن مهمان"
+
                 );
 
 
+                this.renderAll();
 
-                input.value =
-                    "";
+
+                alert(
+
+                    `🎁 ${reward} XP جایزه روزانه گرفتی!`
+
+                );
 
             }
         );
@@ -2023,374 +1793,24 @@ const app = {
     },
 
 
-
-    /* =========================
-       AUTH
-    ========================== */
-
     bindAuth() {
 
-
-        const loginForm =
+        const authButton =
             document.getElementById(
-                "loginForm"
+                "authButton"
             );
 
 
-        const registerForm =
+        const authSubmit =
             document.getElementById(
-                "registerForm"
+                "authSubmit"
             );
 
 
-
-        document
-            .querySelectorAll(
-                "[data-auth-tab]"
-            )
-            .forEach(
-                button => {
-
-
-                    button.addEventListener(
-                        "click",
-                        () => {
-
-
-                            const type =
-                                button.dataset.authTab;
-
-
-
-                            document
-                                .querySelectorAll(
-                                    "[data-auth-tab]"
-                                )
-                                .forEach(
-                                    tab => {
-
-                                        tab.classList.toggle(
-                                            "active",
-                                            tab === button
-                                        );
-
-                                    }
-                                );
-
-
-
-                            if (
-                                type ===
-                                "login"
-                            ) {
-
-
-                                loginForm.classList.remove(
-                                    "hidden"
-                                );
-
-
-                                registerForm.classList.add(
-                                    "hidden"
-                                );
-
-
-                            } else {
-
-
-                                loginForm.classList.add(
-                                    "hidden"
-                                );
-
-
-                                registerForm.classList.remove(
-                                    "hidden"
-                                );
-
-                            }
-
-
-
-                            this.showAuthMessage(
-                                "",
-                                ""
-                            );
-
-                        }
-                    );
-
-                }
+        const toggleAuth =
+            document.getElementById(
+                "toggleAuth"
             );
-
-
-
-        loginForm.addEventListener(
-            "submit",
-            event => {
-
-
-                event.preventDefault();
-
-
-
-                const username =
-                    document.getElementById(
-                        "loginUsername"
-                    ).value;
-
-
-                const password =
-                    document.getElementById(
-                        "loginPassword"
-                    ).value;
-
-
-
-                const result =
-                    login(
-                        username,
-                        password
-                    );
-
-
-
-                if (
-                    !result.success
-                ) {
-
-
-                    this.showAuthMessage(
-                        result.message,
-                        "error"
-                    );
-
-
-                    return;
-
-                }
-
-
-
-                currentUsername =
-                    result.username;
-
-
-
-                /*
-                 * state حساب جدید را بارگذاری می‌کند.
-                 */
-
-                const newState =
-                    loadState(
-                        DEFAULT_STATE,
-                        currentUsername
-                    );
-
-
-
-                Object.keys(
-                    state
-                ).forEach(
-                    key => {
-
-                        delete state[key];
-
-                    }
-                );
-
-
-
-                Object.assign(
-                    state,
-                    newState
-                );
-
-
-
-                state.username =
-                    currentUsername;
-
-
-
-                this.category =
-                    state.currentCategory ||
-                    "general";
-
-
-
-                document.getElementById(
-                    "loginForm"
-                ).reset();
-
-
-
-                this.showAuthMessage(
-                    "✓ ورود با موفقیت انجام شد.",
-                    "success"
-                );
-
-
-
-                this.updateAuthUI();
-
-
-                this.applyTheme();
-
-
-                this.renderAll();
-
-
-                this.loadQuiz();
-
-
-
-                setTimeout(
-                    () => {
-
-                        this.showPage(
-                            "home"
-                        );
-
-                    },
-                    500
-                );
-
-            }
-        );
-
-
-
-        registerForm.addEventListener(
-            "submit",
-            event => {
-
-
-                event.preventDefault();
-
-
-
-                const username =
-                    document.getElementById(
-                        "registerUsername"
-                    ).value;
-
-
-                const password =
-                    document.getElementById(
-                        "registerPassword"
-                    ).value;
-
-
-                const confirmPassword =
-                    document.getElementById(
-                        "registerPasswordConfirm"
-                    ).value;
-
-
-
-                const result =
-                    register(
-                        username,
-                        password,
-                        confirmPassword
-                    );
-
-
-
-                if (
-                    !result.success
-                ) {
-
-
-                    this.showAuthMessage(
-                        result.message,
-                        "error"
-                    );
-
-
-                    return;
-
-                }
-
-
-
-                currentUsername =
-                    result.username;
-
-
-
-                const newState =
-                    loadState(
-                        DEFAULT_STATE,
-                        currentUsername
-                    );
-
-
-
-                Object.keys(
-                    state
-                ).forEach(
-                    key => {
-
-                        delete state[key];
-
-                    }
-                );
-
-
-
-                Object.assign(
-                    state,
-                    newState
-                );
-
-
-
-                state.username =
-                    currentUsername;
-
-
-
-                document.getElementById(
-                    "registerForm"
-                ).reset();
-
-
-
-                this.updateAuthUI();
-
-
-                this.applyTheme();
-
-
-                this.renderAll();
-
-
-                this.loadQuiz();
-
-
-
-                this.showAuthMessage(
-                    "✓ حساب با موفقیت ساخته شد و وارد شدید.",
-                    "success"
-                );
-
-
-
-                setTimeout(
-                    () => {
-
-                        this.showPage(
-                            "home"
-                        );
-
-                    },
-                    700
-                );
-
-            }
-        );
-
 
 
         const logoutButton =
@@ -2399,124 +1819,275 @@ const app = {
             );
 
 
+        if (authButton) {
 
-        logoutButton.addEventListener(
-            "click",
-            () => {
+            authButton.addEventListener(
+                "click",
+                () => {
+
+                    if (currentUser) {
+
+                        logout();
+
+                        location.reload();
+
+                        return;
+
+                    }
 
 
-                logout();
-
-
-                currentUsername =
-                    "guest";
-
-
-
-                const guestState =
-                    loadState(
-                        DEFAULT_STATE,
-                        "guest"
+                    this.setAuthMode(
+                        "login"
                     );
 
 
+                    this.showPage(
+                        "auth"
+                    );
 
-                Object.keys(
-                    state
-                ).forEach(
-                    key => {
+                }
+            );
 
-                        delete state[key];
-
-                    }
-                );
+        }
 
 
+        if (authSubmit) {
 
-                Object.assign(
-                    state,
-                    guestState
-                );
+            authSubmit.addEventListener(
+                "click",
+                () =>
+                    this.submitAuth()
+            );
 
-
-
-                state.username =
-                    "بازیکن مهمان";
-
+        }
 
 
-                this.updateAuthUI();
+        if (toggleAuth) {
+
+            toggleAuth.addEventListener(
+                "click",
+                () => {
+
+                    this.setAuthMode(
+
+                        this.authMode ===
+                        "login"
+
+                            ? "register"
+
+                            : "login"
+
+                    );
+
+                }
+            );
+
+        }
 
 
-                this.renderAll();
+        if (logoutButton) {
 
+            logoutButton.addEventListener(
+                "click",
+                () => {
 
-                this.applyTheme();
+                    logout();
 
+                    location.reload();
 
+                }
+            );
 
-                this.showPage(
-                    "home"
-                );
-
-            }
-        );
+        }
 
     },
 
 
+    setAuthMode(mode) {
 
-    showAuthMessage(
-        message,
-        type
-    ) {
+        this.authMode =
+            mode;
 
 
-        const box =
+        const title =
             document.getElementById(
-                "authMessage"
+                "authTitle"
             );
 
 
+        const submit =
+            document.getElementById(
+                "authSubmit"
+            );
 
-        if (
-            !box
-        ) {
+
+        const toggle =
+            document.getElementById(
+                "toggleAuth"
+            );
+
+
+        const confirmWrap =
+            document.getElementById(
+                "confirmPasswordWrap"
+            );
+
+
+        const msg =
+            document.getElementById(
+                "authMsg"
+            );
+
+
+        if (title) {
+
+            title.textContent =
+
+                mode === "login"
+
+                    ? "ورود به QuizDuo"
+
+                    : "ساخت حساب QuizDuo";
+
+        }
+
+
+        if (submit) {
+
+            submit.textContent =
+
+                mode === "login"
+
+                    ? "ورود"
+
+                    : "ثبت‌نام";
+
+        }
+
+
+        if (toggle) {
+
+            toggle.textContent =
+
+                mode === "login"
+
+                    ? "حساب نداری؟ ثبت‌نام کن"
+
+                    : "قبلاً حساب ساخته‌ای؟ وارد شو";
+
+        }
+
+
+        if (confirmWrap) {
+
+            confirmWrap.classList.toggle(
+
+                "hidden",
+
+                mode === "login"
+
+            );
+
+        }
+
+
+        if (msg) {
+
+            msg.textContent =
+                "";
+
+        }
+
+    },
+
+
+    submitAuth() {
+
+        const name =
+            document.getElementById(
+                "authName"
+            ).value;
+
+
+        const password =
+            document.getElementById(
+                "authPassword"
+            ).value;
+
+
+        const confirm =
+            document.getElementById(
+                "authConfirmPassword"
+            )?.value ||
+            "";
+
+
+        const msg =
+            document.getElementById(
+                "authMsg"
+            );
+
+
+        const result =
+
+            this.authMode ===
+            "login"
+
+                ? login(
+                    name,
+                    password
+                )
+
+                : register(
+                    name,
+                    password,
+                    confirm
+                );
+
+
+        if (!result.ok) {
+
+            msg.textContent =
+                result.message;
+
+
+            msg.className =
+                "auth-error";
+
 
             return;
 
         }
 
 
+        msg.textContent =
 
-        box.textContent =
-            message;
+            this.authMode ===
+            "login"
+
+                ? "ورود موفق بود. در حال ورود..."
+
+                : "ثبت‌نام موفق بود. در حال ورود...";
 
 
-        box.className =
-            "auth-message";
+        msg.className =
+            "auth-success";
 
 
-        if (
-            type
-        ) {
-
-            box.classList.add(
-                type
-            );
-
-        }
+        setTimeout(
+            () =>
+                location.reload(),
+            300
+        );
 
     },
 
 
+    renderAuthButton() {
 
-    updateAuthUI() {
-
-
-        const loginButton =
+        const button =
             document.getElementById(
-                "authNavButton"
+                "authButton"
             );
 
 
@@ -2526,44 +2097,87 @@ const app = {
             );
 
 
-
-        if (
-            isLoggedIn()
-        ) {
-
-
-            loginButton.classList.add(
-                "hidden"
+        const userLabel =
+            document.getElementById(
+                "userLabel"
             );
 
 
-            logoutButton.classList.remove(
-                "hidden"
-            );
+        if (button) {
+
+            button.textContent =
+
+                currentUser
+
+                    ? "خروج"
+
+                    : "ورود / ثبت‌نام";
+
+        }
 
 
-            logoutButton.textContent =
-                `خروج (${state.username})`;
+        if (logoutButton) {
 
+            logoutButton.classList.toggle(
 
-        } else {
+                "hidden",
 
+                !currentUser
 
-            loginButton.classList.remove(
-                "hidden"
-            );
-
-
-            logoutButton.classList.add(
-                "hidden"
             );
 
         }
 
+
+        if (userLabel) {
+
+            userLabel.textContent =
+
+                currentUser
+
+                    ? `سلام، ${currentUser}`
+
+                    : "بازیکن مهمان";
+
+        }
+
+    },
+
+
+    bindSupport() {
+
+        const button =
+            document.getElementById(
+                "supportSend"
+            );
+
+
+        if (!button) return;
+
+
+        button.addEventListener(
+            "click",
+            () => {
+
+                const message =
+                    document.getElementById(
+                        "supportMsg"
+                    );
+
+
+                if (message) {
+
+                    message.textContent =
+                        "پیام پشتیبانی در نسخه فعلی فقط به‌صورت نمایشی ثبت شد.";
+
+                }
+
+            }
+        );
+
     }
 
 };
-
 
 
 app.init();
