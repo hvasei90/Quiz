@@ -1,1022 +1,1508 @@
-<!doctype html>
-<html lang="fa" dir="rtl">
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>QuizDuo</title>
-    <link rel="stylesheet" href="css/style.css">
-</head>
-<body>
+:root {
+    --bg: #f5f7fb;
+    --card: #ffffff;
+    --soft: #eef2f7;
+    --text: #172033;
+    --muted: #6b7280;
+    --teal: #20b8ad;
+    --purple: #7357e8;
+    --gold: #f3b63f;
+    --border: #e1e7ef;
+    --shadow: 0 16px 42px rgba(30,40,65,.09);
+}
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    background:
+        radial-gradient(circle at 10% 0%, #20b8ad12, transparent 30%),
+        radial-gradient(circle at 90% 0%, #7357e812, transparent 30%),
+        var(--bg);
+    color: var(--text);
+    font-family: Tahoma, "Segoe UI", sans-serif;
+}
+
+button,
+input,
+textarea {
+    font: inherit;
+}
+
+button {
+    border: 0;
+    cursor: pointer;
+}
+
+.hidden {
+    display: none !important;
+}
+
+
+/* HEADER */
+
+.site-header {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+
+    display: flex;
+    align-items: center;
+    gap: 18px;
+
+    padding: 12px 4%;
 
-<header class="site-header">
+    background: #ffffffdf;
+    backdrop-filter: blur(16px);
+
+    border-bottom: 1px solid var(--border);
+
+    direction: ltr;
+}
+
+.brand-area {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+}
+
+.logo-mark {
+    width: 38px;
+    height: 38px;
+
+    border-radius: 12px;
+
+    display: grid;
+    place-items: center;
+
+    background:
+        linear-gradient(
+            135deg,
+            var(--teal),
+            var(--purple)
+        );
+
+    color: white;
+    font-weight: 900;
+}
+
+.logo {
+    font-size: 1.25rem;
+    font-weight: 900;
+}
 
-    <div class="brand-area">
-        <div class="logo-mark">Q</div>
-        <div class="logo">QuizDuo</div>
-        <button id="themeToggle" type="button" class="ghost-btn">🌙</button>
-    </div>
+.main-nav {
+    display: flex;
+    gap: 4px;
+    justify-content: flex-end;
 
-    <nav class="main-nav">
-        <button data-page="home">خانه</button>
-        <button data-page="quiz">سؤالات</button>
-        <button data-page="subscription">اشتراک 👑</button>
-        <button data-page="leaderboard">لیدربورد</button>
-        <button data-page="chat">گفت‌وگو</button>
-        <button data-page="support">پشتیبانی</button>
-        <button data-page="profile">پروفایل</button>
-    </nav>
+    flex: 1;
 
-    <div class="auth-area">
-        <button id="authButton" type="button" class="primary-btn">
-            ورود / ثبت‌نام
-        </button>
+    direction: rtl;
 
-        <button id="logoutButton" type="button" class="logout-btn hidden">
-            خروج
-        </button>
-    </div>
-
-</header>
-
-
-<main>
-
-    <!-- HOME -->
-    <section id="home" class="page active">
-
-        <div class="hero">
-
-            <div>
+    overflow: auto;
 
-                <span class="eyebrow">
-                    یاد بگیر • بازی کن • رقابت کن
-                </span>
+    scrollbar-width: none;
+}
 
-                <h1>
-                    به QuizDuo خوش اومدی! 🎯
-                </h1>
+.main-nav::-webkit-scrollbar {
+    display: none;
+}
 
-                <p>
-                    مرحله‌ها رو کامل کن، XP بگیر، Streak بساز و رکورد خودت رو بهتر کن.
-                </p>
+.main-nav button,
+.ghost-btn,
+.logout-btn {
+    background: transparent;
+    color: var(--muted);
 
-                <div class="hero-actions">
+    padding: 9px 11px;
 
-                    <button
-                        class="primary-btn big-btn"
-                        data-page="quiz">
-                        شروع بازی
-                    </button>
-
-                    <button
-                        class="secondary-btn big-btn"
-                        data-page="subscription">
-                        مشاهده اشتراک 👑
-                    </button>
-
-                </div>
-
-            </div>
+    border-radius: 11px;
 
+    white-space: nowrap;
+}
 
-            <div class="hero-stats">
-
-                <div>
-                    <b id="homeXP">0</b>
-                    <span>XP</span>
-                </div>
+.main-nav button:hover,
+.ghost-btn:hover,
+.logout-btn:hover {
+    background: var(--soft);
+    color: var(--text);
+}
 
-                <div>
-                    <b id="homeLevel">1</b>
-                    <span>سطح</span>
-                </div>
-
-                <div>
-                    <b id="homeStreak">0</b>
-                    <span>روز متوالی</span>
-                </div>
-
-            </div>
-
-        </div>
-
-
-        <!-- DAILY XP -->
-        <div
-            id="dailyRewardCard"
-            class="daily-reward-card">
-        </div>
-
-
-        <div class="feature-grid">
-
-            <article class="feature-card">
-                <span>🧠</span>
-                <h3>اطلاعات عمومی</h3>
-                <p>
-                    مرحله‌به‌مرحله دانش خودت رو امتحان کن.
-                </p>
-            </article>
-
-            <article class="feature-card">
-                <span>🎮</span>
-                <h3>تفریحی</h3>
-                <p>
-                    سؤال‌های متنوع و سرگرم‌کننده در انتظارته.
-                </p>
-            </article>
+.auth-area {
+    display: flex;
+    gap: 7px;
+    direction: rtl;
+}
 
-            <article class="feature-card">
-                <span>🏆</span>
-                <h3>رقابت</h3>
-                <p>
-                    با XP بیشتر جایگاه بهتری در لیدربورد می‌گیری.
-                </p>
-            </article>
 
-            <article class="feature-card premium-feature">
-                <span>👑</span>
-                <h3>QuizDuo Premium</h3>
-                <p>
-                    قلب بیشتر، مراحل ویژه و امکانات پیشرفته‌تر.
-                </p>
-            </article>
+/* BUTTONS */
 
-        </div>
+.primary-btn,
+.secondary-btn {
+    padding: 11px 17px;
+    border-radius: 13px;
 
-    </section>
+    font-weight: 800;
 
+    transition: .25s;
+}
 
-    <!-- AUTH -->
-    <section id="auth" class="page">
+.primary-btn {
+    color: white;
 
-        <div class="panel auth-panel">
+    background:
+        linear-gradient(
+            135deg,
+            var(--teal),
+            #149b92
+        );
 
-            <div class="section-heading">
-                <span>👤</span>
+    box-shadow:
+        0 9px 22px #20b8ad2e;
+}
 
-                <div>
-                    <h2 id="authTitle">ورود</h2>
-                    <p>
-                        برای ذخیره پیشرفتت حساب بساز.
-                    </p>
-                </div>
-            </div>
+.primary-btn:hover {
+    transform: translateY(-2px);
+}
 
-            <input
-                id="authName"
-                autocomplete="username"
-                placeholder="نام کاربری">
+.secondary-btn {
+    background: var(--soft);
+    color: var(--text);
+}
 
-            <input
-                id="authPassword"
-                autocomplete="current-password"
-                type="password"
-                placeholder="رمز عبور (حداقل ۶ کاراکتر)">
+.full-btn {
+    width: 100%;
+}
 
-            <div id="confirmPasswordWrap" class="hidden">
+.link-btn {
+    background: none;
+    color: var(--teal);
+    padding: 9px;
+}
 
-                <input
-                    id="authConfirmPassword"
-                    autocomplete="new-password"
-                    type="password"
-                    placeholder="تکرار رمز عبور">
 
-            </div>
+/* PAGES */
 
-            <button
-                id="authSubmit"
-                type="button"
-                class="primary-btn full-btn">
-                ورود
-            </button>
+.page {
+    display: none;
 
-            <button
-                id="toggleAuth"
-                type="button"
-                class="link-btn">
-                ساخت حساب جدید
-            </button>
+    max-width: 1180px;
 
-            <p
-                id="authMsg"
-                class="form-message">
-            </p>
+    margin: auto;
 
-            <div class="notice">
-                نسخه فعلی برای نمونه‌سازی از localStorage استفاده می‌کند؛
-                احراز هویت واقعی در نسخه آنلاین باید با Backend امن انجام شود.
-            </div>
+    padding: 38px 4% 60px;
 
-        </div>
+    min-height: calc(100vh - 110px);
+}
 
-    </section>
+.page.active {
+    display: block;
+    animation: in .4s ease;
+}
 
 
-    <!-- QUIZ -->
-    <section id="quiz" class="page">
+/* HOME */
 
-        <div class="section-heading">
+.hero {
+    display: grid;
 
-            <span>🎯</span>
+    grid-template-columns:
+        1.4fr
+        .8fr;
 
-            <div>
-                <h2>مراحل بازی</h2>
+    gap: 30px;
 
-                <p>
-                    هر مرحله در حال حاضر
-                    <b>۱۰ XP</b>
-                    ارزش دارد.
-                    XP روزانه جداگانه محاسبه می‌شود.
-                </p>
-            </div>
+    align-items: center;
 
-        </div>
+    padding: 45px;
 
+    border-radius: 30px;
 
-        <div class="quiz-tabs">
+    background: #ffffffd9;
 
-            <button
-                type="button"
-                class="active"
-                data-category-tab="general">
-                🧠 اطلاعات عمومی
-            </button>
+    box-shadow: var(--shadow);
+}
 
-            <button
-                type="button"
-                data-category-tab="fun">
-                🎮 تفریحی
-            </button>
+.eyebrow {
+    color: var(--purple);
 
-        </div>
+    font-size: .75rem;
 
+    font-weight: 900;
 
-        <div class="quiz-stats">
+    letter-spacing: 1px;
+}
 
-            <span>
-                ⭐ XP:
-                <b id="quizXP">0</b>
-            </span>
+.hero h1,
+.subscription-hero h1 {
+    font-size:
+        clamp(
+            2rem,
+            4vw,
+            3.3rem
+        );
 
-            <span>
-                🎁 XP روزانه:
-                <b id="dailyXPValue">10</b>
-            </span>
+    margin: 10px 0;
+}
 
-            <span>
-                🔥 Streak:
-                <b id="quizStreak">0</b>
-            </span>
+.hero p,
+.subscription-hero p {
+    color: var(--muted);
+    line-height: 1.9;
+}
 
-            <span>
-                ❤️ قلب:
-                <b id="heartValue">5</b>
-            </span>
+.hero-actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
 
-            <span>
-                ⚡ Combo:
-                <b id="comboValue">0</b>
-            </span>
+    margin-top: 20px;
+}
 
-        </div>
+.big-btn {
+    padding: 13px 21px;
+}
 
+.hero-stats {
+    display: grid;
 
-        <div
-            id="stageList"
-            class="stage-grid">
-        </div>
+    grid-template-columns:
+        repeat(3, 1fr);
 
+    gap: 10px;
+}
 
-        <div
-            id="quizBox"
-            class="quiz-box hidden">
+.hero-stats div {
+    padding: 22px 10px;
 
-            <div class="quiz-topline">
+    text-align: center;
 
-                <span id="quizCategory"></span>
+    background: var(--card);
 
-                <span id="questionNumber"></span>
+    border: 1px solid var(--border);
 
-            </div>
+    border-radius: 20px;
+}
 
+.hero-stats b {
+    display: block;
+    font-size: 1.7rem;
+}
 
-            <div class="progress-track">
-                <div
-                    id="quizProgress"
-                    class="progress-fill">
-                </div>
-            </div>
+.hero-stats span {
+    color: var(--muted);
+    font-size: .8rem;
+}
 
 
-            <div class="timer-row">
+/* DAILY XP */
 
-                <span>زمان</span>
+.daily-reward-card {
+    margin-top: 20px;
 
-                <b id="questionTimer">
-                    20s
-                </b>
+    padding: 18px 22px;
 
-            </div>
+    border-radius: 20px;
 
+    background:
+        linear-gradient(
+            135deg,
+            #7357e814,
+            #20b8ad14
+        );
 
-            <div class="timer-track">
+    border: 1px solid #7357e822;
 
-                <div
-                    id="timerProgress"
-                    class="timer-fill">
-                </div>
+    display: flex;
 
-            </div>
+    align-items: center;
 
+    justify-content: space-between;
 
-            <h2 id="questionText"></h2>
+    gap: 15px;
+}
 
+.daily-reward-card strong {
+    display: block;
+}
 
-            <div
-                id="answers"
-                class="answers">
-            </div>
+.daily-reward-card span {
+    display: block;
 
+    color: var(--muted);
 
-            <div id="quizResult"></div>
+    font-size: .86rem;
 
+    margin-top: 5px;
+}
 
-            <button
-                id="nextQuestionBtn"
-                type="button"
-                class="primary-btn next-btn hidden">
-                سؤال بعدی →
-            </button>
 
-        </div>
+/* FEATURE CARDS */
 
-    </section>
+.feature-grid,
+.benefit-grid {
+    display: grid;
 
+    grid-template-columns:
+        repeat(4, 1fr);
 
-    <!-- SUBSCRIPTION -->
-    <section id="subscription" class="page">
+    gap: 15px;
 
-        <div class="subscription-hero">
+    margin-top: 20px;
+}
 
-            <div>
+.feature-card,
+.benefit-card {
+    padding: 22px;
 
-                <span class="eyebrow">
-                    QUIZDUO PREMIUM
-                </span>
+    border: 1px solid var(--border);
 
-                <h1>
-                    بیشتر بازی کن، بیشتر پیشرفت کن 👑
-                </h1>
+    border-radius: 21px;
 
-                <p>
-                    اشتراک Premium برای بازیکن‌هایی که
-                    می‌خوان امکانات بیشتری داشته باشن.
-                </p>
+    background: #ffffffdd;
 
-            </div>
+    box-shadow:
+        0 9px 25px #1e283c0d;
 
-            <div class="premium-orb">
-                👑
-            </div>
+    transition: .3s;
+}
 
-        </div>
+.feature-card:hover,
+.benefit-card:hover {
+    transform: translateY(-5px);
 
+    box-shadow: var(--shadow);
+}
 
-        <div class="sub-section-title">
+.feature-card span,
+.benefit-card span {
+    font-size: 1.8rem;
+}
 
-            <h2>
-                پلن مناسب خودت رو انتخاب کن
-            </h2>
+.feature-card h3,
+.benefit-card h3 {
+    margin: 11px 0 6px;
+}
 
-            <span>
-                ← برای دیدن همه پلن‌ها اسکرول کن
-            </span>
+.feature-card p,
+.benefit-card p {
+    margin: 0;
 
-        </div>
+    color: var(--muted);
 
+    line-height: 1.8;
+}
 
-        <div class="subscription-scroll">
 
+/* GENERAL */
 
-            <article
-                class="subscription-card"
-                data-plan-card="monthly">
+.panel {
+    background: var(--card);
 
-                <div class="plan-icon">
-                    🌱
-                </div>
+    border: 1px solid var(--border);
 
-                <span class="plan-tag">
-                    شروع
-                </span>
+    border-radius: 24px;
 
-                <h3>
-                    ماهانه
-                </h3>
+    box-shadow: var(--shadow);
+}
 
-                <div class="price">
-                    ۱۰۰,۰۰۰
-                    <small>تومان</small>
-                </div>
+.auth-panel {
+    max-width: 520px;
 
-                <p>
-                    ۱ ماه Premium
-                </p>
+    margin: 35px auto;
 
-                <button
-                    class="primary-btn plan-select"
-                    data-plan="monthly">
-                    انتخاب پلن
-                </button>
+    padding: 30px;
+}
 
-            </article>
+.section-heading {
+    display: flex;
 
+    align-items: center;
 
-            <article
-                class="subscription-card popular"
-                data-plan-card="quarterly">
+    gap: 12px;
 
-                <div class="popular-badge">
-                    محبوب‌ترین
-                </div>
+    margin-bottom: 20px;
+}
 
-                <div class="plan-icon">
-                    🚀
-                </div>
+.section-heading > span {
+    font-size: 1.8rem;
+}
 
-                <span class="plan-tag">
-                    به‌صرفه
-                </span>
+.section-heading h2 {
+    margin: 0 0 5px;
+}
 
-                <h3>
-                    سه‌ماهه
-                </h3>
+.section-heading p {
+    margin: 0;
+    color: var(--muted);
+}
 
-                <div class="price">
-                    ۲۷۰,۰۰۰
-                    <small>تومان</small>
-                </div>
+input,
+textarea {
+    width: 100%;
 
-                <p>
-                    ۳ ماه Premium
-                </p>
+    padding: 12px 14px;
 
-                <button
-                    class="primary-btn plan-select"
-                    data-plan="quarterly">
-                    انتخاب پلن
-                </button>
+    margin-bottom: 11px;
 
-            </article>
+    border: 1px solid var(--border);
 
+    border-radius: 13px;
 
-            <article
-                class="subscription-card"
-                data-plan-card="sixMonth">
+    background: var(--card);
 
-                <div class="plan-icon">
-                    💎
-                </div>
+    color: var(--text);
 
-                <span class="plan-tag">
-                    ارزشمند
-                </span>
+    outline: none;
+}
 
-                <h3>
-                    شش‌ماهه
-                </h3>
+input:focus,
+textarea:focus {
+    border-color: var(--teal);
 
-                <div class="price">
-                    ۴۸۰,۰۰۰
-                    <small>تومان</small>
-                </div>
+    box-shadow:
+        0 0 0 4px #20b8ad18;
+}
 
-                <p>
-                    ۶ ماه + ۱ ماه هدیه
-                </p>
+textarea {
+    min-height: 130px;
+}
 
-                <button
-                    class="primary-btn plan-select"
-                    data-plan="sixMonth">
-                    انتخاب پلن
-                </button>
+.notice,
+.payment-note {
+    padding: 13px 15px;
 
-            </article>
+    border-radius: 13px;
 
+    background: var(--soft);
 
-            <article
-                class="subscription-card"
-                data-plan-card="nineMonth">
+    color: var(--muted);
 
-                <div class="plan-icon">
-                    🏆
-                </div>
+    line-height: 1.8;
 
-                <span class="plan-tag">
-                    ویژه
-                </span>
+    font-size: .85rem;
 
-                <h3>
-                    نه‌ماهه
-                </h3>
+    margin-top: 12px;
+}
 
-                <div class="price">
-                    ۶۶۰,۰۰۰
-                    <small>تومان</small>
-                </div>
+.form-message {
+    min-height: 20px;
 
-                <p>
-                    ۹ ماه + ۲ ماه هدیه
-                </p>
+    color: var(--teal);
 
-                <button
-                    class="primary-btn plan-select"
-                    data-plan="nineMonth">
-                    انتخاب پلن
-                </button>
+    font-size: .86rem;
+}
 
-            </article>
 
+/* QUIZ */
 
-        </div>
+.quiz-tabs {
+    display: flex;
+    gap: 8px;
 
+    margin-bottom: 13px;
+}
 
-        <div class="premium-benefits-section">
+.quiz-tabs button {
+    padding: 11px 16px;
 
-            <div class="sub-section-title">
+    border-radius: 13px;
 
-                <h2>
-                    با Premium چی می‌گیری؟
-                </h2>
+    background: var(--soft);
 
-                <span>
-                    مزایا بدون شلوغی اضافه
-                </span>
+    color: var(--muted);
 
-            </div>
+    font-weight: 800;
+}
 
+.quiz-tabs button.active {
+    color: white;
 
-            <div class="benefit-grid">
+    background:
+        linear-gradient(
+            135deg,
+            var(--teal),
+            var(--purple)
+        );
+}
 
-                <article class="benefit-card">
-                    <span>❤️</span>
-                    <h3>قلب بیشتر</h3>
-                    <p>
-                        حداکثر ۸ قلب برای بازی راحت‌تر.
-                    </p>
-                </article>
+.quiz-stats {
+    display: flex;
 
-                <article class="benefit-card">
-                    <span>🔐</span>
-                    <h3>مراحل ویژه</h3>
-                    <p>
-                        دسترسی به محتوای ویژه در نسخه‌های بعدی.
-                    </p>
-                </article>
+    flex-wrap: wrap;
 
-                <article class="benefit-card">
-                    <span>📊</span>
-                    <h3>آمار پیشرفته</h3>
-                    <p>
-                        جزئیات بیشتر درباره عملکرد و رکوردها.
-                    </p>
-                </article>
+    gap: 8px;
 
-                <article class="benefit-card">
-                    <span>🎁</span>
-                    <h3>هدیه‌های دوره‌ای</h3>
-                    <p>
-                        پاداش‌های کوچک و جذاب برای اعضای Premium.
-                    </p>
-                </article>
+    margin-bottom: 18px;
+}
 
-            </div>
+.quiz-stats span {
+    padding: 9px 12px;
 
-        </div>
+    background: var(--card);
 
+    border: 1px solid var(--border);
 
-        <div class="referral-panel">
+    border-radius: 12px;
+}
 
-            <div>
+.stage-grid {
+    display: grid;
 
-                <span class="referral-icon">
-                    🤝
-                </span>
+    grid-template-columns:
+        repeat(4, 1fr);
 
-                <div>
-                    <h2>
-                        دوستات رو دعوت کن
-                    </h2>
+    gap: 14px;
+}
 
-                    <p>
-                        با رشد QuizDuo، خودت هم جایزه بگیر.
-                    </p>
-                </div>
+.stage-card {
+    padding: 21px;
 
-            </div>
+    border: 1px solid var(--border);
 
+    border-radius: 22px;
 
-            <div class="referral-grid">
+    background: var(--card);
 
-                <div>
-                    <b>۵</b>
-                    <span>دعوت موفق</span>
-                    <strong>+۱ ماه</strong>
-                </div>
+    box-shadow:
+        0 8px 25px #1e283c0d;
 
-                <div>
-                    <b>۱۰</b>
-                    <span>دعوت موفق</span>
-                    <strong>+۲ ماه</strong>
-                </div>
+    transition: .3s;
+}
 
-                <div>
-                    <b>۲۰</b>
-                    <span>دعوت موفق</span>
-                    <strong>+۴ ماه</strong>
-                </div>
+.stage-card:hover {
+    transform: translateY(-5px);
+}
 
-            </div>
+.stage-card.locked {
+    opacity: .55;
+}
 
-        </div>
+.stage-card.completed {
+    border-color: #20b8ad66;
 
+    background:
+        linear-gradient(
+            145deg,
+            #20b8ad10,
+            var(--card)
+        );
+}
 
-        <!-- PAYMENT -->
-        <div
-            id="paymentPanel"
-            class="payment-panel panel">
+.stage-number {
+    font-size: 2rem;
+    font-weight: 900;
+}
 
-            <div class="payment-header">
+.stage-card small {
+    color: var(--muted);
+}
 
-                <div>
+.stage-action {
+    width: 100%;
 
-                    <span class="eyebrow">
-                        SECURE CHECKOUT
-                    </span>
+    margin-top: 14px;
+}
 
-                    <h2>
-                        تکمیل اشتراک
-                    </h2>
+.quiz-box {
+    margin-top: 20px;
 
-                </div>
+    padding: 26px;
+}
 
-                <div class="secure-badge">
-                    🔒 پرداخت امن
-                </div>
+.quiz-topline,
+.timer-row {
+    display: flex;
 
-            </div>
+    justify-content: space-between;
 
+    color: var(--muted);
+}
 
-            <div class="payment-layout">
+.progress-track,
+.timer-track {
+    height: 8px;
 
+    background: var(--soft);
 
-                <div class="selected-plan-box">
+    border-radius: 99px;
 
-                    <span>
-                        پلن انتخاب‌شده
-                    </span>
+    overflow: hidden;
 
-                    <strong id="selectedPlanName">
-                        ماهانه
-                    </strong>
+    margin: 10px 0;
+}
 
-                    <b id="selectedPlanAmount">
-                        ۱۰۰,۰۰۰ تومان
-                    </b>
+.progress-fill,
+.timer-fill {
+    height: 100%;
 
-                </div>
+    width: 0;
 
+    background:
+        linear-gradient(
+            90deg,
+            var(--teal),
+            var(--purple)
+        );
 
-                <div class="discount-box">
+    transition: .25s;
+}
 
-                    <label for="discountCode">
-                        کد تخفیف
-                    </label>
+.timer-fill {
+    background:
+        linear-gradient(
+            90deg,
+            var(--gold),
+            #ef6b73
+        );
+}
 
-                    <div class="discount-row">
+.quiz-box h2 {
+    line-height: 1.8;
 
-                        <input
-                            id="discountCode"
-                            placeholder="مثلاً TEST100K">
+    margin: 20px 0;
+}
 
-                        <button
-                            id="applyDiscount"
-                            type="button"
-                            class="secondary-btn">
-                            اعمال
-                        </button>
+.answers {
+    display: grid;
 
-                    </div>
+    grid-template-columns:
+        1fr 1fr;
 
-                    <p
-                        id="discountMsg"
-                        class="form-message">
-                    </p>
+    gap: 10px;
+}
 
-                </div>
+.answer-btn {
+    text-align: right;
 
+    padding: 15px;
 
-                <div class="payment-summary">
+    border-radius: 15px;
 
-                    <div>
-                        <span>قیمت پلن</span>
-                        <b id="basePrice">
-                            ۱۰۰,۰۰۰ تومان
-                        </b>
-                    </div>
+    background: var(--soft);
 
-                    <div>
-                        <span>تخفیف</span>
-                        <b id="discountAmount">
-                            ۰ تومان
-                        </b>
-                    </div>
+    border: 1px solid var(--border);
 
-                    <div class="final-price">
-                        <span>مبلغ نهایی</span>
-                        <strong id="finalPrice">
-                            ۱۰۰,۰۰۰ تومان
-                        </strong>
-                    </div>
+    transition: .2s;
+}
 
-                </div>
+.answer-btn:hover {
+    border-color: var(--teal);
 
+    transform: translateY(-2px);
+}
 
-                <div class="test-gateway-box">
+.next-btn {
+    margin-top: 14px;
+}
 
-                    <div class="gateway-logo">
-                        Q
-                    </div>
 
-                    <div>
+/* SUBSCRIPTION HERO */
 
-                        <strong>
-                            درگاه آزمایشی QuizDuo
-                        </strong>
+.subscription-hero {
+    display: flex;
 
-                        <p>
-                            برای تست برنامه، با کد
-                            <b>TEST100K</b>
-                            مبلغ ماهانه صفر می‌شود
-                            و اشتراک فعال خواهد شد.
-                        </p>
+    justify-content: space-between;
 
-                    </div>
+    align-items: center;
 
-                </div>
+    padding: 35px;
 
+    border-radius: 28px;
 
-                <button
-                    id="paymentButton"
-                    type="button"
-                    class="primary-btn payment-button">
-                    ادامه به پرداخت
-                </button>
+    background:
+        linear-gradient(
+            135deg,
+            #7357e815,
+            #20b8ad15,
+            #f3b63f12
+        );
 
+    border: 1px solid #7357e81c;
+}
 
-                <p
-                    id="paymentMsg"
-                    class="form-message">
-                </p>
+.premium-orb {
+    width: 125px;
+    height: 125px;
 
+    border-radius: 38px;
 
-                <div class="payment-note">
+    display: grid;
 
-                    نسخه فعلی درگاه واقعی بانکی ندارد؛
-                    مبلغ صفر از طریق درگاه آزمایشی فعال می‌شود.
-                    برای پرداخت واقعی باید Backend و اطلاعات
-                    پذیرنده درگاه به پروژه متصل شود.
+    place-items: center;
 
-                </div>
+    font-size: 4rem;
 
-            </div>
+    background:
+        linear-gradient(
+            145deg,
+            #fff,
+            #f3b63f2d
+        );
 
-        </div>
+    box-shadow:
+        0 18px 40px #7357e828;
 
-    </section>
+    animation:
+        float 4s ease-in-out infinite;
+}
 
 
-    <!-- LEADERBOARD -->
-    <section id="leaderboard" class="page">
+/* SUBSCRIPTION TITLES */
 
-        <div class="section-heading">
+.sub-section-title {
+    display: flex;
 
-            <span>🏆</span>
+    justify-content: space-between;
 
-            <div>
-                <h2>لیدربورد</h2>
-                <p>
-                    رتبه‌بندی بازیکنان ثبت‌نام‌شده روی این نسخه.
-                </p>
-            </div>
+    align-items: end;
 
-        </div>
+    gap: 15px;
 
-        <div class="panel table-panel">
+    margin: 30px 0 12px;
+}
 
-            <table>
+.sub-section-title h2 {
+    margin: 0;
+}
 
-                <thead>
-                    <tr>
-                        <th>رتبه</th>
-                        <th>بازیکن</th>
-                        <th>XP</th>
-                        <th>سطح</th>
-                        <th>مرحله</th>
-                    </tr>
-                </thead>
+.sub-section-title span {
+    color: var(--muted);
 
-                <tbody id="leaderboardBody"></tbody>
+    font-size: .8rem;
+}
 
-            </table>
 
-        </div>
+/* PLAN CARDS */
 
-        <p class="muted">
-            در این نسخه استاتیک، لیدربورد فقط بین حساب‌هایی
-            که روی همین مرورگر ساخته شده‌اند مشترک است.
-        </p>
+.subscription-scroll {
+    display: flex;
 
-    </section>
+    gap: 18px;
 
+    overflow-x: auto;
 
-    <!-- PROFILE -->
-    <section id="profile" class="page">
+    padding:
+        7px
+        5px
+        18px;
 
-        <div class="section-heading">
+    scroll-snap-type: x mandatory;
+}
 
-            <span>👤</span>
+.subscription-scroll::-webkit-scrollbar {
+    height: 8px;
+}
 
-            <div>
-                <h2>پروفایل</h2>
-                <p>
-                    آمار پیشرفتت رو اینجا ببین.
-                </p>
-            </div>
+.subscription-card {
+    position: relative;
 
-        </div>
+    flex: 0 0 265px;
 
+    min-height: 345px;
 
-        <div class="profile-grid">
+    scroll-snap-align: start;
 
-            <div class="profile-card panel">
+    padding: 25px;
 
-                <div
-                    class="avatar"
-                    id="profileAvatar">
-                    م
-                </div>
+    border-radius: 26px;
 
-                <h2 id="profileName">
-                    بازیکن مهمان
-                </h2>
+    background:
+        linear-gradient(
+            160deg,
+            var(--card),
+            #ffffffbb
+        );
 
-                <p>
-                    سطح
-                    <b id="profileLevel">1</b>
-                </p>
+    border: 1px solid var(--border);
 
-                <span
-                    id="premiumBadge"
-                    class="premium-badge hidden">
-                    👑 Premium
-                </span>
+    box-shadow:
+        0 12px 35px #1e283c12;
 
-            </div>
+    transition: .35s;
 
+    overflow: hidden;
+}
 
-            <div class="stats-card panel">
+.subscription-card:hover {
+    transform:
+        translateY(-8px)
+        rotate(-.5deg);
 
-                <div>
-                    <span>XP</span>
-                    <b id="profileXP">0</b>
-                </div>
+    box-shadow:
+        0 22px 45px #1e283c1d;
+}
 
-                <div>
-                    <span>Streak</span>
-                    <b id="profileStreak">0</b>
-                </div>
+.subscription-card.selected {
+    border: 2px solid var(--teal);
 
-                <div>
-                    <span>❤️ قلب</span>
-                    <b id="profileHearts">5</b>
-                </div>
+    box-shadow:
+        0 0 0 5px #20b8ad12,
+        0 20px 45px #20b8ad1c;
+}
 
-                <div>
-                    <span>عمومی</span>
-                    <b id="profileGeneral">0</b>
-                </div>
+.subscription-card.popular {
+    border-color: #7357e888;
 
-                <div>
-                    <span>تفریحی</span>
-                    <b id="profileFun">0</b>
-                </div>
+    background:
+        linear-gradient(
+            155deg,
+            #7357e814,
+            var(--card)
+        );
+}
 
-            </div>
+.popular-badge {
+    position: absolute;
 
-        </div>
+    top: 14px;
+    left: 14px;
 
-    </section>
+    background: var(--purple);
 
+    color: white;
 
-    <!-- CHAT -->
-    <section id="chat" class="page">
+    border-radius: 99px;
 
-        <div class="section-heading">
+    padding: 6px 9px;
 
-            <span>💬</span>
+    font-size: .7rem;
 
-            <div>
-                <h2>گفت‌وگو</h2>
-                <p>
-                    فعلاً پیام‌ها فقط روی همین مرورگر ذخیره می‌شوند.
-                </p>
-            </div>
+    font-weight: 900;
+}
 
-        </div>
+.plan-icon {
+    font-size: 2.5rem;
+}
 
+.plan-tag {
+    display: block;
 
-        <div class="panel chat-panel">
+    color: var(--teal);
 
-            <div
-                id="messages"
-                class="messages">
-            </div>
+    font-size: .72rem;
 
-            <div class="chat-input">
+    font-weight: 900;
 
-                <input
-                    id="chatInput"
-                    placeholder="پیامت رو بنویس...">
+    margin-top: 12px;
+}
 
-                <button
-                    id="sendChat"
-                    class="primary-btn">
-                    ارسال
-                </button>
+.subscription-card h3 {
+    font-size: 1.35rem;
 
-            </div>
+    margin: 7px 0;
+}
 
-        </div>
+.price {
+    font-size: 1.65rem;
 
-    </section>
+    font-weight: 900;
 
+    margin: 18px 0 5px;
+}
 
-    <!-- SUPPORT -->
-    <section id="support" class="page">
+.price small {
+    font-size: .7rem;
 
-        <div class="panel auth-panel">
+    color: var(--muted);
+}
 
-            <div class="section-heading">
+.subscription-card p {
+    color: var(--muted);
 
-                <span>🎫</span>
+    min-height: 38px;
+}
 
-                <div>
-                    <h2>پشتیبانی</h2>
-                    <p>
-                        پیامت را ثبت کن.
-                    </p>
-                </div>
+.plan-select {
+    width: 100%;
 
-            </div>
+    margin-top: 15px;
+}
 
-            <input
-                id="supportSubject"
-                placeholder="موضوع">
 
-            <textarea
-                id="supportText"
-                placeholder="پیام">
-            </textarea>
+/* PREMIUM BENEFITS */
 
-            <button
-                id="supportSend"
-                class="primary-btn full-btn">
-                ارسال درخواست
-            </button>
+.referral-panel {
+    margin-top: 23px;
 
-            <p
-                id="supportMsg"
-                class="form-message">
-            </p>
+    padding: 24px;
 
-        </div>
+    border-radius: 24px;
 
-    </section>
+    background:
+        linear-gradient(
+            135deg,
+            #20b8ad10,
+            #7357e810
+        );
 
-</main>
+    border: 1px solid #20b8ad20;
+}
 
+.referral-panel > div:first-child {
+    display: flex;
 
-<footer>
-    QuizDuo • نسخه آزمایشی
-</footer>
+    gap: 12px;
 
+    align-items: center;
+}
 
-<script
-    type="module"
-    src="js/core/app.js">
-</script>
+.referral-icon {
+    font-size: 2rem;
+}
 
-</body>
-</html>
+.referral-panel h2 {
+    margin: 0 0 5px;
+}
+
+.referral-panel p {
+    margin: 0;
+
+    color: var(--muted);
+}
+
+.referral-grid {
+    display: grid;
+
+    grid-template-columns:
+        repeat(3, 1fr);
+
+    gap: 12px;
+
+    margin-top: 17px;
+}
+
+.referral-grid > div {
+    padding: 17px;
+
+    text-align: center;
+
+    background: #ffffffb8;
+
+    border-radius: 17px;
+}
+
+.referral-grid b,
+.referral-grid strong {
+    display: block;
+
+    font-size: 1.3rem;
+}
+
+.referral-grid span {
+    color: var(--muted);
+
+    font-size: .78rem;
+}
+
+
+/* PAYMENT */
+
+.payment-panel {
+    margin-top: 23px;
+
+    padding: 28px;
+}
+
+.payment-header {
+    display: flex;
+
+    justify-content: space-between;
+
+    gap: 15px;
+
+    align-items: center;
+}
+
+.payment-header h2 {
+    margin: 4px 0;
+}
+
+.secure-badge {
+    padding: 8px 11px;
+
+    border-radius: 99px;
+
+    background: #20b8ad15;
+
+    color: var(--teal);
+
+    font-size: .78rem;
+
+    font-weight: 900;
+}
+
+.payment-layout {
+    max-width: 850px;
+
+    margin: 18px auto 0;
+
+    display: grid;
+
+    grid-template-columns:
+        1fr 1fr;
+
+    gap: 13px;
+}
+
+.selected-plan-box,
+.discount-box,
+.payment-summary,
+.test-gateway-box {
+    padding: 17px;
+
+    border-radius: 18px;
+
+    background: var(--soft);
+
+    border: 1px solid var(--border);
+}
+
+.selected-plan-box span {
+    display: block;
+
+    color: var(--muted);
+
+    font-size: .78rem;
+}
+
+.selected-plan-box strong {
+    display: block;
+
+    margin: 6px 0;
+
+    font-size: 1.15rem;
+}
+
+.selected-plan-box b {
+    color: var(--purple);
+}
+
+.discount-box label {
+    font-weight: 800;
+
+    display: block;
+
+    margin-bottom: 7px;
+}
+
+.discount-row {
+    display: flex;
+
+    gap: 7px;
+}
+
+.discount-row input {
+    margin: 0;
+}
+
+.payment-summary,
+.test-gateway-box,
+.payment-button {
+    grid-column: 1 / -1;
+}
+
+.payment-summary > div {
+    display: flex;
+
+    justify-content: space-between;
+
+    padding: 7px 0;
+}
+
+.final-price {
+    border-top: 1px dashed var(--border);
+
+    margin-top: 5px;
+
+    padding-top: 13px !important;
+}
+
+.final-price strong {
+    font-size: 1.35rem;
+
+    color: var(--purple);
+}
+
+.test-gateway-box {
+    display: flex;
+
+    align-items: center;
+
+    gap: 12px;
+
+    background:
+        linear-gradient(
+            135deg,
+            #20b8ad10,
+            #7357e810
+        );
+}
+
+.gateway-logo {
+    width: 48px;
+    height: 48px;
+
+    display: grid;
+
+    place-items: center;
+
+    border-radius: 15px;
+
+    color: white;
+
+    font-weight: 900;
+
+    background:
+        linear-gradient(
+            135deg,
+            var(--teal),
+            var(--purple)
+        );
+}
+
+.test-gateway-box p {
+    margin: 5px 0 0;
+
+    color: var(--muted);
+
+    font-size: .82rem;
+
+    line-height: 1.7;
+}
+
+.payment-button {
+    padding: 14px;
+}
+
+
+/* TABLE */
+
+.table-panel {
+    overflow: auto;
+}
+
+.table-panel table {
+    width: 100%;
+
+    min-width: 600px;
+
+    border-collapse: collapse;
+}
+
+.table-panel th,
+.table-panel td {
+    padding: 13px;
+
+    border-bottom: 1px solid var(--border);
+
+    text-align: right;
+}
+
+.muted {
+    color: var(--muted);
+}
+
+
+/* PROFILE */
+
+.profile-grid {
+    display: grid;
+
+    grid-template-columns:
+        .8fr
+        1.2fr;
+
+    gap: 15px;
+}
+
+.profile-card {
+    padding: 28px;
+
+    text-align: center;
+}
+
+.avatar {
+    width: 88px;
+    height: 88px;
+
+    margin: auto;
+
+    border-radius: 28px;
+
+    display: grid;
+
+    place-items: center;
+
+    color: white;
+
+    font-size: 2rem;
+
+    font-weight: 900;
+
+    background:
+        linear-gradient(
+            135deg,
+            var(--teal),
+            var(--purple)
+        );
+}
+
+.premium-badge {
+    display: inline-block;
+
+    margin-top: 8px;
+
+    padding: 6px 10px;
+
+    border-radius: 99px;
+
+    background: #f3b63f26;
+
+    color: #8b6200;
+
+    font-size: .75rem;
+
+    font-weight: 900;
+}
+
+.stats-card {
+    padding: 20px;
+
+    display: grid;
+
+    grid-template-columns:
+        repeat(3, 1fr);
+
+    gap: 10px;
+}
+
+.stats-card > div {
+    padding: 17px;
+
+    text-align: center;
+
+    background: var(--soft);
+
+    border-radius: 16px;
+}
+
+.stats-card span,
+.stats-card b {
+    display: block;
+}
+
+.stats-card span {
+    color: var(--muted);
+
+    font-size: .8rem;
+
+    margin-bottom: 5px;
+}
+
+
+/* CHAT */
+
+.chat-panel {
+    padding: 20px;
+}
+
+.messages {
+    min-height: 320px;
+
+    max-height: 520px;
+
+    overflow: auto;
+}
+
+.message {
+    padding: 10px 13px;
+
+    background: var(--soft);
+
+    border-radius: 14px;
+
+    margin-bottom: 8px;
+}
+
+.message b {
+    color: var(--purple);
+}
+
+.chat-input {
+    display: flex;
+
+    gap: 8px;
+
+    margin-top: 10px;
+}
+
+.chat-input input {
+    margin: 0;
+}
+
+
+/* FOOTER */
+
+footer {
+    text-align: center;
+
+    color: var(--muted);
+
+    padding: 22px;
+
+    border-top: 1px solid var(--border);
+}
+
+
+/* ANIMATIONS */
+
+@keyframes in {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: none;
+    }
+}
+
+@keyframes float {
+    0%,
+    100% {
+        transform:
+            translateY(0)
+            rotate(-3deg);
+    }
+
+    50% {
+        transform:
+            translateY(-8px)
+            rotate(3deg);
+    }
+}
+
+
+/* DARK */
+
+body.dark {
+    --bg: #101522;
+    --card: #171d2b;
+    --soft: #20283a;
+    --text: #eef3ff;
+    --muted: #9aa6bc;
+    --border: #2c3549;
+}
+
+body.dark .site-header {
+    background: #101522df;
+}
+
+
+/* RESPONSIVE */
+
+@media (max-width: 1000px) {
+
+    .feature-grid,
+    .benefit-grid {
+        grid-template-columns:
+            repeat(2, 1fr);
+    }
+
+    .stage-grid {
+        grid-template-columns:
+            repeat(3, 1fr);
+    }
+
+    .site-header {
+        flex-wrap: wrap;
+    }
+
+    .main-nav {
+        order: 3;
+        width: 100%;
+    }
+}
+
+
+@media (max-width: 720px) {
+
+    .hero {
+        grid-template-columns: 1fr;
+        padding: 30px;
+    }
+
+    .feature-grid,
+    .benefit-grid,
+    .stage-grid,
+    .profile-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .answers {
+        grid-template-columns: 1fr;
+    }
+
+    .payment-layout {
+        grid-template-columns: 1fr;
+    }
+
+    .payment-summary,
+    .test-gateway-box,
+    .payment-button {
+        grid-column: auto;
+    }
+
+    .referral-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .subscription-hero {
+        padding: 25px;
+    }
+
+    .premium-orb {
+        width: 90px;
+        height: 90px;
+        font-size: 3rem;
+    }
+
+    .payment-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .auth-area {
+        margin-left: auto;
+    }
+}
+
+
+@media (max-width: 500px) {
+
+    .hero-stats {
+        gap: 5px;
+    }
+
+    .hero-stats div {
+        padding: 15px 6px;
+    }
+
+    .hero-stats b {
+        font-size: 1.25rem;
+    }
+
+    .daily-reward-card {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .chat-input {
+        flex-direction: column;
+    }
+}
