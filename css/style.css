@@ -865,3 +865,360 @@ footer {
     }
 
 }
+
+/* ==========================================
+   PREMIUM / SUBSCRIPTION
+========================================== */
+
+.subscription-hero {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    gap: 25px;
+
+    padding: 38px;
+
+    border-radius: 25px;
+
+    color: #fff;
+
+    background:
+        linear-gradient(
+            135deg,
+            #5546d8,
+            #8a72ed
+        );
+
+    box-shadow: var(--shadow);
+
+    margin-bottom: 22px;
+}
+
+.subscription-hero h1 {
+    margin: 5px 0;
+    font-size: 34px;
+}
+
+.subscription-hero p {
+    opacity: .9;
+}
+
+.premium-crown {
+    font-size: 75px;
+
+    filter:
+        drop-shadow(
+            0 10px 15px
+            rgba(0,0,0,.2)
+        );
+}
+
+.subscription-grid {
+    display: grid;
+
+    grid-template-columns:
+        repeat(
+            4,
+            1fr
+        );
+
+    gap: 15px;
+}
+
+.subscription-card {
+    position: relative;
+
+    background: var(--surface);
+
+    border: 1px solid var(--border);
+
+    border-radius: 20px;
+
+    padding: 24px;
+
+    text-align: center;
+
+    box-shadow: var(--shadow);
+
+    transition: .2s;
+}
+
+.subscription-card:hover {
+    transform: translateY(-5px);
+
+    border-color:
+        var(--primary);
+}
+
+.subscription-card.popular {
+    border:
+        2px solid
+        var(--primary);
+}
+
+.popular-badge {
+    position: absolute;
+
+    top: -12px;
+    right: 20px;
+
+    background:
+        var(--primary);
+
+    color: #fff;
+
+    padding: 4px 12px;
+
+    border-radius: 999px;
+
+    font-size: 12px;
+}
+
+.plan-icon {
+    display: block;
+
+    font-size: 34px;
+
+    margin-bottom: 7px;
+}
+
+.subscription-card h3 {
+    margin: 5px;
+}
+
+.price {
+    font-size: 27px;
+
+    font-weight: 900;
+
+    color: var(--primary);
+
+    margin: 12px 0;
+}
+
+.price small {
+    display: block;
+
+    font-size: 12px;
+
+    color: var(--muted);
+
+    font-weight: normal;
+}
+
+.subscription-card p {
+    min-height: 45px;
+
+    color: var(--muted);
+
+    font-size: 13px;
+}
+
+.subscription-card .primary-btn {
+    width: 100%;
+}
+
+.premium-benefits,
+.referral-panel,
+.payment-panel {
+    margin-top: 22px;
+}
+
+.benefit-grid {
+    display: grid;
+
+    grid-template-columns:
+        repeat(
+            3,
+            1fr
+        );
+
+    gap: 12px;
+}
+
+.benefit-grid div {
+    background: var(--surface2);
+
+    padding: 16px;
+
+    border-radius: 15px;
+}
+
+.benefit-grid span {
+    font-size: 25px;
+
+    display: block;
+}
+
+.benefit-grid b,
+.benefit-grid small {
+    display: block;
+}
+
+.benefit-grid small {
+    color: var(--muted);
+
+    margin-top: 4px;
+}
+
+.referral-grid {
+    display: grid;
+
+    grid-template-columns:
+        repeat(
+            3,
+            1fr
+        );
+
+    gap: 12px;
+}
+
+.referral-item {
+    padding: 20px;
+
+    border-radius: 16px;
+
+    background:
+        linear-gradient(
+            135deg,
+            rgba(91,75,219,.1),
+            rgba(128,109,240,.08)
+        );
+
+    text-align: center;
+}
+
+.referral-item strong,
+.referral-item span {
+    display: block;
+}
+
+.referral-item strong {
+    font-size: 25px;
+
+    color: var(--primary);
+}
+
+.payment-info {
+    display: grid;
+
+    gap: 10px;
+
+    margin-bottom: 15px;
+}
+
+.payment-info div {
+    display: flex;
+
+    justify-content: space-between;
+
+    gap: 15px;
+
+    padding: 13px;
+
+    background: var(--surface2);
+
+    border-radius: 12px;
+}
+
+.discount-row {
+    display: flex;
+
+    gap: 8px;
+}
+
+.discount-row input {
+    flex: 1;
+
+    padding: 12px;
+
+    border: 1px solid var(--border);
+
+    border-radius: 11px;
+
+    background: var(--surface);
+
+    color: var(--text);
+}
+
+.final-price {
+    margin: 15px 0;
+
+    padding: 15px;
+
+    border-radius: 13px;
+
+    background:
+        linear-gradient(
+            135deg,
+            rgba(91,75,219,.12),
+            rgba(128,109,240,.1)
+        );
+
+    font-size: 17px;
+}
+
+.final-price strong {
+    color: var(--primary);
+
+    font-size: 23px;
+}
+
+.payment-note {
+    padding: 12px;
+
+    margin-bottom: 12px;
+
+    border-radius: 12px;
+
+    background: var(--surface2);
+
+    color: var(--muted);
+
+    font-size: 13px;
+}
+
+
+@media (max-width: 900px) {
+
+    .subscription-grid {
+        grid-template-columns:
+            repeat(
+                2,
+                1fr
+            );
+    }
+
+    .benefit-grid {
+        grid-template-columns:
+            repeat(
+                2,
+                1fr
+            );
+    }
+
+}
+
+
+@media (max-width: 600px) {
+
+    .subscription-hero {
+        padding: 27px 20px;
+    }
+
+    .subscription-hero h1 {
+        font-size: 27px;
+    }
+
+    .premium-crown {
+        font-size: 50px;
+    }
+
+    .subscription-grid,
+    .benefit-grid,
+    .referral-grid {
+        grid-template-columns: 1fr;
+    }
+
+}
